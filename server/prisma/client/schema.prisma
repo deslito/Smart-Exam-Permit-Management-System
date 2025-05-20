@@ -1,0 +1,224 @@
+// Generator and Datasource Configuration
+generator client {
+  provider = "prisma-client-js"
+  output   = "./client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums for standardized fields
+enum Role {
+  STUDENT
+  INVIGILATOR
+  ADMIN
+}
+
+enum StudyMode {
+  DAY
+  EVENING
+}
+
+enum Semester {
+  ONE
+  TWO
+}
+
+enum PaymentStatus {
+  paid
+  pending
+}
+
+enum PermitStatus {
+  valid
+  invalid
+}
+
+enum CourseCategory {
+  CORE
+  ELECTIVE
+}
+
+enum CourseType {
+  Bachelor
+  Diploma
+  Master
+  Phd
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+model User {
+  id          String       @id @default(uuid())
+  email       String       @unique
+  password    String
+  role        Role
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  student     Student?
+  invigilator Invigilator?
+  admin       Admin?
+}
+
+// Student-specific details
+model Student {
+  id              String               @id
+  firstName       String
+  otherNames      String?
+  lastName        String
+  studentNo       String               @unique
+  regNo           String               @unique
+  gender          Gender
+  studyYear       Int
+  campus          String
+  academicYear    String
+  currentSemester Semester
+  picture         String?
+  paymentStatus   PaymentStatus        @default(pending)
+  permitStatus    PermitStatus         @default(invalid)
+  programmeId     String
+  programme       Programme            @relation("ProgrammeStudents", fields: [programmeId], references: [id])
+  user            User                 @relation(fields: [id], references: [id])
+  enrolledUnits   EnrolledCourseUnit[]
+  studentQrCodes  StudentQrCode[]
+}
+
+// Invigilator-specific details
+model Invigilator {
+  id                String           @id @default(uuid())
+  invigilatorNumber String           @unique
+  title             String
+  firstName         String
+  otherNames        String?
+  lastName          String
+  picture           String?
+  currentSemester   Semester
+  user              User             @relation(fields: [id], references: [id])
+  assignedExams     ExamAssignment[]
+  departmentId      String // <-- Add this
+  department        Department       @relation(fields: [departmentId], references: [id]) // <-- Add this
+}
+
+// Administrator-specific details
+model Admin {
+  id                String          @id
+  firstName         String
+  otherNames        String?
+  lastName          String
+  picture           String?
+  facultyOrSchoolId String
+  facultyOrSchool   FacultyOrSchool @relation(fields: [facultyOrSchoolId], references: [id])
+  user              User            @relation(fields: [id], references: [id])
+}
+
+// Course Unit details
+model CourseUnit {
+  id         String               @id @default(uuid())
+  code       String
+  title      String
+  credits    Int
+  year       Int
+  semester   Semester
+  category   CourseCategory       @default(CORE)
+  courseName String
+  course     Course               @relation(fields: [courseName], references: [name])
+  enrolledBy EnrolledCourseUnit[]
+  exams      Exam[]
+
+  @@unique([code, courseName]) // Ensures no duplicate codes within a programme
+}
+
+// Junction table for Student and CourseUnit
+model EnrolledCourseUnit {
+  id                    String     @id @default(uuid())
+  student               Student    @relation(fields: [studentId], references: [id])
+  studentId             String
+  courseUnit            CourseUnit @relation(fields: [courseUnitId], references: [id])
+  courseUnitId          String
+  attempt               Int        @default(1)
+  year                  Int
+  semester              Semester
+  isInvigilatorApproved Boolean    @default(false)
+  invigilatorApprovedAt DateTime?
+  approvedBy            String?
+
+  @@unique([studentId, courseUnitId, attempt])
+}
+
+// Exam details
+model Exam {
+  id           String           @id @default(uuid())
+  courseUnit   CourseUnit       @relation(fields: [courseUnitId], references: [id])
+  courseUnitId String
+  examDate     DateTime
+  startTime    DateTime
+  endTime      DateTime
+  venue        String
+  isApproved   Boolean          @default(false) // Admin approval for this exam session
+  approvedAt   DateTime? // When admin approved (for 4-hour window)
+  invigilators ExamAssignment[]
+}
+
+model ExamAssignment {
+  id            String      @id @default(uuid())
+  invigilator   Invigilator @relation(fields: [invigilatorId], references: [id])
+  invigilatorId String
+  exam          Exam        @relation(fields: [examId], references: [id])
+  examId        String
+
+  @@unique([invigilatorId, examId])
+}
+
+model StudentQrCode {
+  id        String   @id @default(uuid())
+  student   Student  @relation(fields: [studentId], references: [id])
+  studentId String
+  qrCode    String?
+  semester  Semester
+  issuedAt  DateTime
+  expiresAt DateTime
+  isActive  Boolean  @default(true)
+
+  @@unique([studentId, semester]) // <-- change from @@index to @@unique
+}
+
+model Programme {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  course    Course    @relation(fields: [courseId], references: [id])
+  programme StudyMode
+  courseId  String
+  students  Student[] @relation("ProgrammeStudents")
+}
+
+model FacultyOrSchool {
+  id          String       @id @default(uuid())
+  name        String       @unique
+  departments Department[]
+  admins      Admin[] // <--- Add this line
+}
+
+model Department {
+  id                String          @id @default(uuid())
+  name              String
+  facultyOrSchool   FacultyOrSchool @relation(fields: [facultyOrSchoolId], references: [id])
+  facultyOrSchoolId String
+  courses           Course[]
+  invigilators      Invigilator[] // <-- Add this line
+}
+
+model Course {
+  id           String       @id @default(uuid())
+  name         String       @unique
+  type         CourseType
+  code         String       @unique
+  department   Department   @relation(fields: [departmentId], references: [id])
+  departmentId String
+  programmes   Programme[]
+  courseUnits  CourseUnit[] // <-- Add this line
+}
