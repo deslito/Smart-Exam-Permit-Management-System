@@ -1,0 +1,119 @@
+/* global.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
+
+/* 0. HARD WEB RESET */
+html, body, #root, #__next {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* 1. Tailwind Directives */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 2. Base Layer: CSS Variables & Base Styles */
+@layer base {
+  html, body, #root {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  :root {
+    /* Brand Color Tokens */
+    --university-blue: #0057B7;
+    --university-orange: #F7941D;
+    --university-green: #D1D700;
+    --university-navy: #002060;
+    --university-gray: #4D4D4D;
+
+    /* General UI Tokens */
+    --background: 210 50% 98%;
+    --foreground: 220 40% 15%;
+    --primary: 210 90% 35%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 22 100% 58%;
+    --secondary-foreground: 210 40% 98%;
+    --accent: 84 65% 50%;
+    --accent-foreground: 210 40% 98%;
+    --muted: 210 30% 93%;
+    --muted-foreground: 220 20% 45%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 0.75rem;
+  }
+
+  body {
+    @apply bg-[hsl(var(--background))] text-[hsl(var(--foreground))] font-['Inter',sans-serif];
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', sans-serif;
+  }
+}
+
+/* 3. Components Layer: Custom Utilities */
+@layer components {
+  .glass-card {
+    @apply backdrop-blur-lg bg-white/20 border border-white/30 rounded-2xl shadow-glass;
+  }
+
+  .neuro-card {
+    @apply bg-white rounded-2xl shadow-neuro border border-gray-100;
+  }
+
+  .neuro-button {
+    @apply transition-all duration-200 ease-in-out active:shadow-neuro-inset active:scale-95;
+  }
+
+  .shadow-neuro {
+    @apply shadow-[5px_5px_10px_#d1d9e6,_-5px_-5px_10px_#ffffff];
+  }
+
+  .shadow-neuro-inset {
+    @apply shadow-[inset_5px_5px_10px_#d1d9e6,_inset_-5px_-5px_10px_#ffffff];
+  }
+
+  .status-badge {
+    @apply px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5;
+  }
+  .status-badge-valid { @apply bg-green-100 text-green-700; }
+  .status-badge-pending { @apply bg-amber-100 text-amber-700; }
+  .status-badge-expired { @apply bg-red-100 text-red-700; }
+
+  /* Removed legacy #root max-width/padding to allow full-screen layouts */
+
+  .logo {
+    height: 6em;
+    padding: 1.5em;
+    transition: filter 300ms;
+  }
+  .logo:hover {
+    filter: drop-shadow(0 0 2em #646cffaa);
+  }
+  @keyframes logo-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    a:nth-of-type(2) .logo { animation: logo-spin infinite 20s linear; }
+  }
+
+  .card {
+    padding: 2em;
+  }
+
+  .read-the-docs {
+    color: #888;
+  }
+}
