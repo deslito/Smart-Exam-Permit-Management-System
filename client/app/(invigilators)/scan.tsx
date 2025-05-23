@@ -18,6 +18,7 @@ import { invigilatorTheme } from "./_layout";
 import { Camera, CameraView, BarcodeScanningResult } from "expo-camera";
 import * as Linking from 'expo-linking';
 import { useStudents } from "@/contexts/StudentContext";
+import { QR_CODE_BASE_URL } from "../../config";
 
 // Helper function for mobile detection
 const isMobile = () => {
@@ -178,20 +179,29 @@ export default function ScanQRPage() {
     const isApproved = nextUnit.isInvigilatorApproved || nextUnit.approved || nextUnit.isApproved;
     const start = new Date(nextUnit.startTime || nextUnit.examDate || nextUnit.courseUnit?.examDate);
     const end = new Date(nextUnit.endTime || (start.getTime() + 2 * 60 * 60 * 1000)); // fallback: 2hr window
-    if (!isApproved) {
-      router.push('/(invigilators)/qr/WaitingForApproval');
-      return;
-    }
-    if (now < start) {
-      router.push('/(invigilators)/qr/WaitingForApproval');
+    if (!isApproved || now < start) {
+      // Use QR_CODE_BASE_URL for mobile deep link or web fallback
+      if (Platform.OS === "web") {
+        window.location.href = `${QR_CODE_BASE_URL}/qr/WaitingForApproval`;
+      } else {
+        Linking.openURL(`${QR_CODE_BASE_URL}/qr/WaitingForApproval`);
+      }
       return;
     }
     if (now > end) {
-      router.push('/(invigilators)/qr/ApprovalTimeExpired');
+      if (Platform.OS === "web") {
+        window.location.href = `${QR_CODE_BASE_URL}/qr/ApprovalTimeExpired`;
+      } else {
+        Linking.openURL(`${QR_CODE_BASE_URL}/qr/ApprovalTimeExpired`);
+      }
       return;
     }
     // Exam is approved and ongoing
-    router.push({ pathname: '/(invigilators)/qr/[id]', params: { id: qrId } });
+    if (Platform.OS === "web") {
+      window.location.href = `${QR_CODE_BASE_URL}/qr/${qrId}`;
+    } else {
+      Linking.openURL(`${QR_CODE_BASE_URL}/qr/${qrId}`);
+    }
   };
 
   // Mobile web: load html5-qrcode and start scanner

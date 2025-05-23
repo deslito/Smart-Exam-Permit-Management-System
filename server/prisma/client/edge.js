@@ -326,12 +326,11 @@ const config = {
     "db"
   ],
   "activeProvider": "postgresql",
-  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
         "fromEnvVar": "DATABASE_URL",
-        "value": null
+        "value": "postgresql://deslito_owner:npg_2A5ondYxCNiD@ep-damp-pine-a5ma360q-pooler.us-east-2.aws.neon.tech/deslito?sslmode=require"
       }
     }
   },

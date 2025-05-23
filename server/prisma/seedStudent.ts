@@ -170,7 +170,8 @@ async function main() {
           },
         });
 
-        const BASE_URL = process.env.QR_BASE_URL || "http://localhost:8081/(invigilators)/qr";
+        // Use QR_CODE_BASE_URL from server/.env and include the full invigilator QR path
+        const BASE_URL = process.env.QR_CODE_BASE_URL || "http://localhost:8081/(invigilators)/qr";
         console.log("BASE_URL", BASE_URL);
 
         const qrUrl = `${BASE_URL}/${qrRecord.id}`;

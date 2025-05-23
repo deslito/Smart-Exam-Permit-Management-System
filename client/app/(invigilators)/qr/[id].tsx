@@ -2,21 +2,50 @@ import { useLocalSearchParams } from "expo-router";
 import { View, Text, Image, ScrollView, Pressable } from "react-native";
 import React, { useEffect, useState } from "react";
 import { useStudents } from "@/contexts/StudentContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useInvigilators } from "@/contexts/InvigilatorContext";
+import config, { QR_CODE_BASE_URL } from "../../../config";
 import tw from "twrnc";
 
 export default function StudentQrPage() {
   const { id } = useLocalSearchParams();
   const { getStudentByQrId, approveEnrolledCourseUnit } = useStudents();
+  const { user } = useAuth();
+  const { getInvigilator } = useInvigilators();
 
   const [student, setStudent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [approving, setApproving] = useState(false);
+  const [invigilator, setInvigilator] = useState<any>(null);
+  const [feedback, setFeedback] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) {
       getStudentByQrId(id as string)
         .then((data) => setStudent(data))
         .finally(() => setLoading(false));
+    }
+  }, [id]);
+
+  useEffect(() => {
+    if (user?.id) {
+      getInvigilator(user.id).then(setInvigilator);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && id) {
+      const userAgent = navigator.userAgent || navigator.vendor;
+      if (/android/i.test(userAgent)) {
+        // Open in Android app using intent or scheme
+        window.location.href = `intent://invigilators/${id}#Intent;scheme=kyambogoexamapp;package=com.deslito.smartexampermitapp;end`;
+      } else if (/iPad|iPhone|iPod/.test(userAgent)) {
+        // Open in iOS app using scheme
+        window.location.href = `kyambogoexamapp://invigilators/${id}`;
+      } else {
+        // Fallback to web URL (now correct: just append /<id> to QR_CODE_BASE_URL)
+        window.location.href = `${QR_CODE_BASE_URL}/${id}`;
+      }
     }
   }, [id]);
 
@@ -39,17 +68,20 @@ export default function StudentQrPage() {
 
   return (
     <ScrollView style={tw`flex-1 bg-gray-50`}>
-      {/* Approved by banner */}
+      {/* Approved by banner - always show if approved, with latest info from DB */}
       {isApproved && (
-        <View style={tw`bg-green-100 px-4 py-3 flex-row items-center`}>
-          <Text style={tw`text-green-700 font-semibold`}>
-            Approved by: {approvedBy}
-          </Text>
-          {approvedAt && (
-            <Text style={tw`text-xs text-green-700 ml-2`}>
-              • Time: {new Date(approvedAt).toLocaleString()}
+        <View style={tw`bg-green-100 px-4 py-3 flex-row items-center justify-between`}> 
+          <View style={tw`flex-row items-center`}>
+            <Text style={tw`text-green-700 font-semibold`}>
+              Approved by: {approvedBy || "-"}
             </Text>
-          )}
+            {approvedAt && (
+              <Text style={tw`text-xs text-green-700 ml-2`}>
+                • Time: {new Date(approvedAt).toLocaleString()}
+              </Text>
+            )}
+          </View>
+          <Text style={tw`text-green-700 font-bold ml-4`}>APPROVED</Text>
         </View>
       )}
 
@@ -114,25 +146,33 @@ export default function StudentQrPage() {
         {/* Approve button */}
         <View style={tw`mt-6`}>
           <Pressable
-            style={[
+            style={({ pressed }) => [
               tw`rounded-lg py-3`,
-              isApproved || approving ? tw`bg-gray-300` : tw`bg-lime-400`,
+              (isApproved || approving)
+                ? tw`bg-gray-300 opacity-60`
+                : tw`bg-lime-400`,
+              // Remove hover/press effect if disabled
+              (isApproved || approving) && tw``,
+              // Optionally, you can add a border or cursor style for web
             ]}
             disabled={isApproved || approving || !todayUnit}
             onPress={async () => {
-              if (!todayUnit) return;
+              if (!todayUnit || !invigilator) return;
               setApproving(true);
+              setFeedback(null);
               try {
-                // Replace with actual invigilator info
-                await approveEnrolledCourseUnit(
-                  todayUnit.id,
-                  "INVIGILATOR_NAME_OR_ID"
-                );
+                // Use invigilator's name or staff ID for approvedBy
+                const approvedBy =
+                  invigilator.invigilatorNumber ||
+                  invigilator.id ||
+                  invigilator.firstName + " " + invigilator.lastName;
+                await approveEnrolledCourseUnit(todayUnit.id, approvedBy);
                 // Refresh student data
                 const updated = await getStudentByQrId(id as string);
                 setStudent(updated);
+                setFeedback("Approval successful.");
               } catch (e) {
-                // Optionally show error
+                setFeedback("Approval failed. Please try again.");
               } finally {
                 setApproving(false);
               }
@@ -142,6 +182,15 @@ export default function StudentQrPage() {
               {isApproved ? "Approved" : approving ? "Approving..." : "Approve"}
             </Text>
           </Pressable>
+          {feedback && (
+            <Text
+              style={tw`text-center mt-2 text-${
+                feedback.includes("failed") ? "red-600" : "green-700"
+              }`}
+            >
+              {feedback}
+            </Text>
+          )}
         </View>
       </View>
     </ScrollView>
