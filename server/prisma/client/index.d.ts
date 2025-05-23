@@ -4785,7 +4785,6 @@ export namespace Prisma {
     otherNames: string | null
     lastName: string | null
     picture: string | null
-    currentSemester: $Enums.Semester | null
     departmentId: string | null
   }
 
@@ -4797,7 +4796,6 @@ export namespace Prisma {
     otherNames: string | null
     lastName: string | null
     picture: string | null
-    currentSemester: $Enums.Semester | null
     departmentId: string | null
   }
 
@@ -4809,7 +4807,6 @@ export namespace Prisma {
     otherNames: number
     lastName: number
     picture: number
-    currentSemester: number
     departmentId: number
     _all: number
   }
@@ -4823,7 +4820,6 @@ export namespace Prisma {
     otherNames?: true
     lastName?: true
     picture?: true
-    currentSemester?: true
     departmentId?: true
   }
 
@@ -4835,7 +4831,6 @@ export namespace Prisma {
     otherNames?: true
     lastName?: true
     picture?: true
-    currentSemester?: true
     departmentId?: true
   }
 
@@ -4847,7 +4842,6 @@ export namespace Prisma {
     otherNames?: true
     lastName?: true
     picture?: true
-    currentSemester?: true
     departmentId?: true
     _all?: true
   }
@@ -4932,7 +4926,6 @@ export namespace Prisma {
     otherNames: string | null
     lastName: string
     picture: string | null
-    currentSemester: $Enums.Semester
     departmentId: string
     _count: InvigilatorCountAggregateOutputType | null
     _min: InvigilatorMinAggregateOutputType | null
@@ -4961,7 +4954,6 @@ export namespace Prisma {
     otherNames?: boolean
     lastName?: boolean
     picture?: boolean
-    currentSemester?: boolean
     departmentId?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
     assignedExams?: boolean | Invigilator$assignedExamsArgs<ExtArgs>
@@ -4977,7 +4969,6 @@ export namespace Prisma {
     otherNames?: boolean
     lastName?: boolean
     picture?: boolean
-    currentSemester?: boolean
     departmentId?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
     department?: boolean | DepartmentDefaultArgs<ExtArgs>
@@ -4991,7 +4982,6 @@ export namespace Prisma {
     otherNames?: boolean
     lastName?: boolean
     picture?: boolean
-    currentSemester?: boolean
     departmentId?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
     department?: boolean | DepartmentDefaultArgs<ExtArgs>
@@ -5005,11 +4995,10 @@ export namespace Prisma {
     otherNames?: boolean
     lastName?: boolean
     picture?: boolean
-    currentSemester?: boolean
     departmentId?: boolean
   }
 
-  export type InvigilatorOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "invigilatorNumber" | "title" | "firstName" | "otherNames" | "lastName" | "picture" | "currentSemester" | "departmentId", ExtArgs["result"]["invigilator"]>
+  export type InvigilatorOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "invigilatorNumber" | "title" | "firstName" | "otherNames" | "lastName" | "picture" | "departmentId", ExtArgs["result"]["invigilator"]>
   export type InvigilatorInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
     assignedExams?: boolean | Invigilator$assignedExamsArgs<ExtArgs>
@@ -5040,7 +5029,6 @@ export namespace Prisma {
       otherNames: string | null
       lastName: string
       picture: string | null
-      currentSemester: $Enums.Semester
       departmentId: string
     }, ExtArgs["result"]["invigilator"]>
     composites: {}
@@ -5475,7 +5463,6 @@ export namespace Prisma {
     readonly otherNames: FieldRef<"Invigilator", 'String'>
     readonly lastName: FieldRef<"Invigilator", 'String'>
     readonly picture: FieldRef<"Invigilator", 'String'>
-    readonly currentSemester: FieldRef<"Invigilator", 'Semester'>
     readonly departmentId: FieldRef<"Invigilator", 'String'>
   }
     
@@ -16989,7 +16976,6 @@ export namespace Prisma {
     otherNames: 'otherNames',
     lastName: 'lastName',
     picture: 'picture',
-    currentSemester: 'currentSemester',
     departmentId: 'departmentId'
   };
 
@@ -17511,7 +17497,6 @@ export namespace Prisma {
     otherNames?: StringNullableFilter<"Invigilator"> | string | null
     lastName?: StringFilter<"Invigilator"> | string
     picture?: StringNullableFilter<"Invigilator"> | string | null
-    currentSemester?: EnumSemesterFilter<"Invigilator"> | $Enums.Semester
     departmentId?: StringFilter<"Invigilator"> | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     assignedExams?: ExamAssignmentListRelationFilter
@@ -17526,7 +17511,6 @@ export namespace Prisma {
     otherNames?: SortOrderInput | SortOrder
     lastName?: SortOrder
     picture?: SortOrderInput | SortOrder
-    currentSemester?: SortOrder
     departmentId?: SortOrder
     user?: UserOrderByWithRelationInput
     assignedExams?: ExamAssignmentOrderByRelationAggregateInput
@@ -17544,7 +17528,6 @@ export namespace Prisma {
     otherNames?: StringNullableFilter<"Invigilator"> | string | null
     lastName?: StringFilter<"Invigilator"> | string
     picture?: StringNullableFilter<"Invigilator"> | string | null
-    currentSemester?: EnumSemesterFilter<"Invigilator"> | $Enums.Semester
     departmentId?: StringFilter<"Invigilator"> | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     assignedExams?: ExamAssignmentListRelationFilter
@@ -17559,7 +17542,6 @@ export namespace Prisma {
     otherNames?: SortOrderInput | SortOrder
     lastName?: SortOrder
     picture?: SortOrderInput | SortOrder
-    currentSemester?: SortOrder
     departmentId?: SortOrder
     _count?: InvigilatorCountOrderByAggregateInput
     _max?: InvigilatorMaxOrderByAggregateInput
@@ -17577,7 +17559,6 @@ export namespace Prisma {
     otherNames?: StringNullableWithAggregatesFilter<"Invigilator"> | string | null
     lastName?: StringWithAggregatesFilter<"Invigilator"> | string
     picture?: StringNullableWithAggregatesFilter<"Invigilator"> | string | null
-    currentSemester?: EnumSemesterWithAggregatesFilter<"Invigilator"> | $Enums.Semester
     departmentId?: StringWithAggregatesFilter<"Invigilator"> | string
   }
 
@@ -17835,6 +17816,7 @@ export namespace Prisma {
 
   export type ExamWhereUniqueInput = Prisma.AtLeast<{
     id?: string
+    courseUnitId_examDate?: ExamCourseUnitIdExamDateCompoundUniqueInput
     AND?: ExamWhereInput | ExamWhereInput[]
     OR?: ExamWhereInput[]
     NOT?: ExamWhereInput | ExamWhereInput[]
@@ -17847,7 +17829,7 @@ export namespace Prisma {
     approvedAt?: DateTimeNullableFilter<"Exam"> | Date | string | null
     courseUnit?: XOR<CourseUnitScalarRelationFilter, CourseUnitWhereInput>
     invigilators?: ExamAssignmentListRelationFilter
-  }, "id">
+  }, "id" | "courseUnitId_examDate">
 
   export type ExamOrderByWithAggregationInput = {
     id?: SortOrder
@@ -18414,7 +18396,6 @@ export namespace Prisma {
     otherNames?: string | null
     lastName: string
     picture?: string | null
-    currentSemester: $Enums.Semester
     user?: UserCreateNestedOneWithoutInvigilatorInput
     assignedExams?: ExamAssignmentCreateNestedManyWithoutInvigilatorInput
     department: DepartmentCreateNestedOneWithoutInvigilatorsInput
@@ -18428,7 +18409,6 @@ export namespace Prisma {
     otherNames?: string | null
     lastName: string
     picture?: string | null
-    currentSemester: $Enums.Semester
     departmentId: string
     assignedExams?: ExamAssignmentUncheckedCreateNestedManyWithoutInvigilatorInput
   }
@@ -18440,7 +18420,6 @@ export namespace Prisma {
     otherNames?: NullableStringFieldUpdateOperationsInput | string | null
     lastName?: StringFieldUpdateOperationsInput | string
     picture?: NullableStringFieldUpdateOperationsInput | string | null
-    currentSemester?: EnumSemesterFieldUpdateOperationsInput | $Enums.Semester
     user?: UserUpdateOneRequiredWithoutInvigilatorNestedInput
     assignedExams?: ExamAssignmentUpdateManyWithoutInvigilatorNestedInput
     department?: DepartmentUpdateOneRequiredWithoutInvigilatorsNestedInput
@@ -18454,7 +18433,6 @@ export namespace Prisma {
     otherNames?: NullableStringFieldUpdateOperationsInput | string | null
     lastName?: StringFieldUpdateOperationsInput | string
     picture?: NullableStringFieldUpdateOperationsInput | string | null
-    currentSemester?: EnumSemesterFieldUpdateOperationsInput | $Enums.Semester
     departmentId?: StringFieldUpdateOperationsInput | string
     assignedExams?: ExamAssignmentUncheckedUpdateManyWithoutInvigilatorNestedInput
   }
@@ -18467,7 +18445,6 @@ export namespace Prisma {
     otherNames?: string | null
     lastName: string
     picture?: string | null
-    currentSemester: $Enums.Semester
     departmentId: string
   }
 
@@ -18478,7 +18455,6 @@ export namespace Prisma {
     otherNames?: NullableStringFieldUpdateOperationsInput | string | null
     lastName?: StringFieldUpdateOperationsInput | string
     picture?: NullableStringFieldUpdateOperationsInput | string | null
-    currentSemester?: EnumSemesterFieldUpdateOperationsInput | $Enums.Semester
   }
 
   export type InvigilatorUncheckedUpdateManyInput = {
@@ -18489,7 +18465,6 @@ export namespace Prisma {
     otherNames?: NullableStringFieldUpdateOperationsInput | string | null
     lastName?: StringFieldUpdateOperationsInput | string
     picture?: NullableStringFieldUpdateOperationsInput | string | null
-    currentSemester?: EnumSemesterFieldUpdateOperationsInput | $Enums.Semester
     departmentId?: StringFieldUpdateOperationsInput | string
   }
 
@@ -19481,7 +19456,6 @@ export namespace Prisma {
     otherNames?: SortOrder
     lastName?: SortOrder
     picture?: SortOrder
-    currentSemester?: SortOrder
     departmentId?: SortOrder
   }
 
@@ -19493,7 +19467,6 @@ export namespace Prisma {
     otherNames?: SortOrder
     lastName?: SortOrder
     picture?: SortOrder
-    currentSemester?: SortOrder
     departmentId?: SortOrder
   }
 
@@ -19505,7 +19478,6 @@ export namespace Prisma {
     otherNames?: SortOrder
     lastName?: SortOrder
     picture?: SortOrder
-    currentSemester?: SortOrder
     departmentId?: SortOrder
   }
 
@@ -19719,6 +19691,11 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedDateTimeNullableFilter<$PrismaModel>
     _max?: NestedDateTimeNullableFilter<$PrismaModel>
+  }
+
+  export type ExamCourseUnitIdExamDateCompoundUniqueInput = {
+    courseUnitId: string
+    examDate: Date | string
   }
 
   export type ExamCountOrderByAggregateInput = {
@@ -21290,7 +21267,6 @@ export namespace Prisma {
     otherNames?: string | null
     lastName: string
     picture?: string | null
-    currentSemester: $Enums.Semester
     assignedExams?: ExamAssignmentCreateNestedManyWithoutInvigilatorInput
     department: DepartmentCreateNestedOneWithoutInvigilatorsInput
   }
@@ -21302,7 +21278,6 @@ export namespace Prisma {
     otherNames?: string | null
     lastName: string
     picture?: string | null
-    currentSemester: $Enums.Semester
     departmentId: string
     assignedExams?: ExamAssignmentUncheckedCreateNestedManyWithoutInvigilatorInput
   }
@@ -21400,7 +21375,6 @@ export namespace Prisma {
     otherNames?: NullableStringFieldUpdateOperationsInput | string | null
     lastName?: StringFieldUpdateOperationsInput | string
     picture?: NullableStringFieldUpdateOperationsInput | string | null
-    currentSemester?: EnumSemesterFieldUpdateOperationsInput | $Enums.Semester
     assignedExams?: ExamAssignmentUpdateManyWithoutInvigilatorNestedInput
     department?: DepartmentUpdateOneRequiredWithoutInvigilatorsNestedInput
   }
@@ -21412,7 +21386,6 @@ export namespace Prisma {
     otherNames?: NullableStringFieldUpdateOperationsInput | string | null
     lastName?: StringFieldUpdateOperationsInput | string
     picture?: NullableStringFieldUpdateOperationsInput | string | null
-    currentSemester?: EnumSemesterFieldUpdateOperationsInput | $Enums.Semester
     departmentId?: StringFieldUpdateOperationsInput | string
     assignedExams?: ExamAssignmentUncheckedUpdateManyWithoutInvigilatorNestedInput
   }
@@ -22342,7 +22315,6 @@ export namespace Prisma {
     otherNames?: string | null
     lastName: string
     picture?: string | null
-    currentSemester: $Enums.Semester
     user?: UserCreateNestedOneWithoutInvigilatorInput
     department: DepartmentCreateNestedOneWithoutInvigilatorsInput
   }
@@ -22355,7 +22327,6 @@ export namespace Prisma {
     otherNames?: string | null
     lastName: string
     picture?: string | null
-    currentSemester: $Enums.Semester
     departmentId: string
   }
 
@@ -22409,7 +22380,6 @@ export namespace Prisma {
     otherNames?: NullableStringFieldUpdateOperationsInput | string | null
     lastName?: StringFieldUpdateOperationsInput | string
     picture?: NullableStringFieldUpdateOperationsInput | string | null
-    currentSemester?: EnumSemesterFieldUpdateOperationsInput | $Enums.Semester
     user?: UserUpdateOneRequiredWithoutInvigilatorNestedInput
     department?: DepartmentUpdateOneRequiredWithoutInvigilatorsNestedInput
   }
@@ -22422,7 +22392,6 @@ export namespace Prisma {
     otherNames?: NullableStringFieldUpdateOperationsInput | string | null
     lastName?: StringFieldUpdateOperationsInput | string
     picture?: NullableStringFieldUpdateOperationsInput | string | null
-    currentSemester?: EnumSemesterFieldUpdateOperationsInput | $Enums.Semester
     departmentId?: StringFieldUpdateOperationsInput | string
   }
 
@@ -22843,7 +22812,6 @@ export namespace Prisma {
     otherNames?: string | null
     lastName: string
     picture?: string | null
-    currentSemester: $Enums.Semester
     user?: UserCreateNestedOneWithoutInvigilatorInput
     assignedExams?: ExamAssignmentCreateNestedManyWithoutInvigilatorInput
   }
@@ -22856,7 +22824,6 @@ export namespace Prisma {
     otherNames?: string | null
     lastName: string
     picture?: string | null
-    currentSemester: $Enums.Semester
     assignedExams?: ExamAssignmentUncheckedCreateNestedManyWithoutInvigilatorInput
   }
 
@@ -22947,7 +22914,6 @@ export namespace Prisma {
     otherNames?: StringNullableFilter<"Invigilator"> | string | null
     lastName?: StringFilter<"Invigilator"> | string
     picture?: StringNullableFilter<"Invigilator"> | string | null
-    currentSemester?: EnumSemesterFilter<"Invigilator"> | $Enums.Semester
     departmentId?: StringFilter<"Invigilator"> | string
   }
 
@@ -23458,7 +23424,6 @@ export namespace Prisma {
     otherNames?: string | null
     lastName: string
     picture?: string | null
-    currentSemester: $Enums.Semester
   }
 
   export type CourseUpdateWithoutDepartmentInput = {
@@ -23493,7 +23458,6 @@ export namespace Prisma {
     otherNames?: NullableStringFieldUpdateOperationsInput | string | null
     lastName?: StringFieldUpdateOperationsInput | string
     picture?: NullableStringFieldUpdateOperationsInput | string | null
-    currentSemester?: EnumSemesterFieldUpdateOperationsInput | $Enums.Semester
     user?: UserUpdateOneRequiredWithoutInvigilatorNestedInput
     assignedExams?: ExamAssignmentUpdateManyWithoutInvigilatorNestedInput
   }
@@ -23506,7 +23470,6 @@ export namespace Prisma {
     otherNames?: NullableStringFieldUpdateOperationsInput | string | null
     lastName?: StringFieldUpdateOperationsInput | string
     picture?: NullableStringFieldUpdateOperationsInput | string | null
-    currentSemester?: EnumSemesterFieldUpdateOperationsInput | $Enums.Semester
     assignedExams?: ExamAssignmentUncheckedUpdateManyWithoutInvigilatorNestedInput
   }
 
@@ -23518,7 +23481,6 @@ export namespace Prisma {
     otherNames?: NullableStringFieldUpdateOperationsInput | string | null
     lastName?: StringFieldUpdateOperationsInput | string
     picture?: NullableStringFieldUpdateOperationsInput | string | null
-    currentSemester?: EnumSemesterFieldUpdateOperationsInput | $Enums.Semester
   }
 
   export type ProgrammeCreateManyCourseInput = {

@@ -155,7 +155,6 @@ exports.Prisma.InvigilatorScalarFieldEnum = {
   otherNames: 'otherNames',
   lastName: 'lastName',
   picture: 'picture',
-  currentSemester: 'currentSemester',
   departmentId: 'departmentId'
 };
 

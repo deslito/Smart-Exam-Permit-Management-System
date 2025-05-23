@@ -23,3 +23,33 @@ export const getInvigilatorById = async (id: string) => {
   });
   return res.data;
 };
+
+export const createInvigilator = async (data: any) => {
+  const token = await getToken();
+  const res = await axios.post(`${API_BASE_URL}/invigilators`, data, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return res.data;
+};
+
+export const updateInvigilator = async (id: string, data: any) => {
+  const token = await getToken();
+  const res = await axios.put(`${API_BASE_URL}/invigilators/${id}`, data, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return res.data;
+};
+
+export const deleteInvigilator = async (id: string) => {
+  const token = await getToken();
+  const res = await axios.delete(`${API_BASE_URL}/invigilators/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return res.data;
+};

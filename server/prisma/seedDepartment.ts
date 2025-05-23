@@ -26,7 +26,7 @@ const departments: DeptSeed[] = [
   {
     id: "DE004",
     facultyOrSchoolId: "FC001",
-    name: "Department of Mining, Chemical and Petroleum Engineering",
+    name: "Department of Chemical and Petroleum Engineering",
   },
 
   // Faculty of Science

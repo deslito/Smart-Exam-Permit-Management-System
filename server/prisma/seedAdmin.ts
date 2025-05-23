@@ -7,7 +7,7 @@ const admins = [
     firstName: 'Admin',
     lastName: 'User',
     otherNames: null,
-    facultyOrSchool: 'School of Computing and Information Science', // Must match a Programme.facultyOrSchool
+    facultyOrSchool: 'Faculty of Engineering', // Must match a Programme.facultyOrSchool
   },
   // Add more admins here if needed
 ];

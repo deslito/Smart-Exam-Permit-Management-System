@@ -1,164 +1,135 @@
 import prisma from '../config/prismaClient';
 
-const SEMESTER = 'ONE'; // or 'TWO', as needed
+const SEMESTER = 'TWO'; // Only seed for semester two
 
-function getExamDates() {
-  const today = new Date();
-  let dates: Date[] = [];
-  let day = today.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
-
-  function prevWeekday(date: Date, skip: number = 1) {
-    let d = new Date(date);
-    for (let i = 0; i < skip; i++) {
-      do {
-        d.setDate(d.getDate() - 1);
-      } while (d.getDay() === 0 || d.getDay() === 6);
-    }
-    return d;
-  }
-
-  function nextWeekday(date: Date, skip: number = 1) {
-    let d = new Date(date);
-    for (let i = 0; i < skip; i++) {
-      do {
-        d.setDate(d.getDate() + 1);
-      } while (d.getDay() === 0 || d.getDay() === 6);
-    }
-    return d;
-  }
-
-  if (day === 1) { // Monday
-    dates = [
-      prevWeekday(today, 2), // Thursday
-      prevWeekday(today, 1), // Friday
-      today                  // Monday
-    ];
-  } else if (day === 0) { // Sunday
-    dates = [
-      prevWeekday(today, 2), // Thursday
-      prevWeekday(today, 1), // Friday
-      nextWeekday(today, 1)  // Monday
-    ];
-  } else {
-    dates = [
-      prevWeekday(today, 2),
-      prevWeekday(today, 1),
-      today
-    ];
-  }
-  return dates.sort((a, b) => a.getTime() - b.getTime());
+function getTodayExamStartEnd() {
+  const now = new Date();
+  let start = new Date(now);
+  start.setMinutes(0, 0, 0);
+  start.setHours(now.getHours() + 1); // next full hour
+  let end = new Date(start);
+  end.setHours(start.getHours() + 3); // 3 hours duration
+  return { start, end };
 }
 
 async function main() {
-  // Fetch once at the top
   const invigilators = await prisma.invigilator.findMany();
-  let fallbackInvigilator = await prisma.invigilator.findFirst({
-    where: { firstName: "John", lastName: "Doe" }
-  });
+  const fallbackInvigilator = invigilators[0];
   const students = await prisma.student.findMany({
-    include: {
-      programme: { include: { course: true } }
-    }
+    include: { programme: { include: { course: true } } }
   });
+  const courseUnits = await prisma.courseUnit.findMany({ where: { semester: SEMESTER } });
 
-  const courseUnits = await prisma.courseUnit.findMany({
-    where: { semester: SEMESTER }
-  });
+  // 1. Simulate 5 days: first 3 course units get today and previous days, rest get next consecutive weekdays
+  const totalDays = 5;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  // Generate all exam days (previous 2, today, and next 2), skipping weekends
+  let examDays: Date[] = [];
+  // Previous 2 weekdays
+  let prevDay = new Date(today);
+  for (let i = 0; i < 2; i++) {
+    do {
+      prevDay.setDate(prevDay.getDate() - 1);
+    } while (prevDay.getDay() === 0 || prevDay.getDay() === 6); // skip Sun/Sat
+    examDays.unshift(new Date(prevDay));
+  }
+  // Today (if not weekend, else next weekday)
+  let examToday = new Date(today);
+  if (examToday.getDay() === 0 || examToday.getDay() === 6) {
+    // If today is weekend, move to next Monday
+    do {
+      examToday.setDate(examToday.getDate() + 1);
+    } while (examToday.getDay() === 0 || examToday.getDay() === 6);
+  }
+  examDays.push(new Date(examToday));
+  // Next 2 weekdays
+  let nextDay = new Date(examToday);
+  for (let i = 0; i < 2; i++) {
+    do {
+      nextDay.setDate(nextDay.getDate() + 1);
+    } while (nextDay.getDay() === 0 || nextDay.getDay() === 6);
+    examDays.push(new Date(nextDay));
+  }
 
-  const examDates = getExamDates();
-
-  // 1. Create exams for all course units in this semester
+  // For each day, schedule 1 course unit from each course (if available)
+  // Map: courseName -> [courseUnits]
+  const courseMap: Record<string, any[]> = {};
   for (const cu of courseUnits) {
-    for (let i = 0; i < 3; i++) {
-      // Check if exam already exists for this course unit and date
-      const examDate = new Date(examDates[i]);
-      const exists = await prisma.exam.findFirst({
-        where: {
-          courseUnitId: cu.id,
-          examDate: {
-            gte: new Date(examDate.setHours(0, 0, 0, 0)),
-            lte: new Date(examDate.setHours(23, 59, 59, 999))
-          }
-        }
-      });
-      if (exists) continue;
-
-      const startTime = new Date(examDate);
+    if (!cu.courseName) continue;
+    if (!courseMap[cu.courseName]) courseMap[cu.courseName] = [];
+    courseMap[cu.courseName].push(cu);
+  }
+  // For each day, for each course, schedule 1 course unit (if available)
+  for (let dayIdx = 0; dayIdx < examDays.length; dayIdx++) {
+    const examDate = examDays[dayIdx];
+    if (!examDate || isNaN(new Date(examDate).getTime())) continue;
+    for (const courseName in courseMap) {
+      const cu = courseMap[courseName][dayIdx];
+      if (!cu) continue;
+      let startTime = new Date(examDate);
       startTime.setHours(9, 0, 0, 0);
-      const endTime = new Date(examDate);
+      let endTime = new Date(examDate);
       endTime.setHours(12, 0, 0, 0);
-
-      await prisma.exam.create({
-        data: {
+      let isApproved = examDate < today;
+      let approvedAt = isApproved ? new Date(startTime) : null;
+      // Create or update exam
+      let exam = await prisma.exam.upsert({
+        where: {
+          courseUnitId_examDate: {
+            courseUnitId: cu.id,
+            examDate: examDate,
+          }
+        },
+        update: {
+          startTime, endTime, isApproved, approvedAt, venue: 'Main Hall'
+        },
+        create: {
           courseUnitId: cu.id,
           examDate,
           startTime,
           endTime,
+          isApproved,
+          approvedAt,
           venue: 'Main Hall',
         }
       });
-      console.log(`✅ Exam created for ${cu.code} (${cu.title}) on ${examDate.toDateString()}`);
+      // Assign any invigilator
+      const assignedInvigilator = invigilators[Math.floor(Math.random() * invigilators.length)] || fallbackInvigilator;
+      await prisma.examAssignment.upsert({
+        where: {
+          invigilatorId_examId: {
+            invigilatorId: assignedInvigilator.id,
+            examId: exam.id
+          }
+        },
+        update: {},
+        create: {
+          invigilatorId: assignedInvigilator.id,
+          examId: exam.id
+        }
+      });
     }
   }
 
-  // 2. Assign invigilators and approve students for past exams
+  // 2. Enroll students for their course units for this semester (no approval yet)
   for (const student of students) {
-    const { studyYear, currentSemester, programme, permitStatus } = student;
-    const courseUnits = await prisma.courseUnit.findMany({
+    const { studyYear, programme } = student;
+    const units = await prisma.courseUnit.findMany({
       where: {
         courseName: programme.course.name,
         year: studyYear,
-        semester: currentSemester
+        semester: SEMESTER
       }
     });
-
-    // Only consider the first 3 course units (the 3 exams)
-    const examUnits = courseUnits.slice(0, 3);
-
-    for (let i = 0; i < examUnits.length; i++) {
-      const unit = examUnits[i];
-
-      // Find the exam for this course unit and date (should exist from above)
-      const exam = await prisma.exam.findFirst({
-        where: { courseUnitId: unit.id }
-      });
-      if (!exam) continue;
-
-      // Assign invigilator randomly from department
-      const deptInvigilators = invigilators.filter(
-        inv => inv.departmentId === programme.course.departmentId
-      );
-      let assignedInvigilator = deptInvigilators.length
-        ? deptInvigilators[Math.floor(Math.random() * deptInvigilators.length)]
-        : null;
-
-      if (assignedInvigilator) {
-        // Create ExamAssignment if not exists
-        const exists = await prisma.examAssignment.findFirst({
-          where: {
-            examId: exam.id,
-            invigilatorId: assignedInvigilator.id
-          }
-        });
-        if (!exists) {
-          await prisma.examAssignment.create({
-            data: {
-              examId: exam.id,
-              invigilatorId: assignedInvigilator.id
-            }
-          });
-        }
-      }
-
-      // Enroll student in this course unit if not already
+    // Only enroll for the course units that have an exam scheduled (first 3)
+    for (const unit of units.slice(0, 3)) {
+      // Enroll student if not already
       let enrolled = await prisma.enrolledCourseUnit.findFirst({
-        where: {
-          studentId: student.id,
-          courseUnitId: unit.id
-        }
+        where: { studentId: student.id, courseUnitId: unit.id }
       });
       if (!enrolled) {
-        enrolled = await prisma.enrolledCourseUnit.create({
+        await prisma.enrolledCourseUnit.create({
           data: {
             studentId: student.id,
             courseUnitId: unit.id,
@@ -167,81 +138,10 @@ async function main() {
           }
         });
       }
-
-      // For past exams (first two), approve if permitStatus is valid
-      if (i < 2 && permitStatus === "valid") {
-        await prisma.enrolledCourseUnit.update({
-          where: { id: enrolled.id },
-          data: {
-            isInvigilatorApproved: true,
-            invigilatorApprovedAt: new Date(),
-            approvedBy: assignedInvigilator ? assignedInvigilator.id : null
-          }
-        });
-      }
-      // For the 3rd/current exam, leave approval as false
     }
   }
 
-  // Get all students with their programme and course
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  for (const student of students) {
-    const { studyYear, currentSemester, programme } = student;
-    const courseUnits = await prisma.courseUnit.findMany({
-      where: {
-        courseName: programme.course.name,
-        year: studyYear,
-        semester: currentSemester
-      }
-    });
-
-    for (const unit of courseUnits) {
-      // Find the exam for this course unit
-      const exam = await prisma.exam.findFirst({
-        where: { courseUnitId: unit.id }
-      });
-      if (!exam) continue;
-
-      // Only consider exams before today
-      const examDay = new Date(exam.examDate);
-      examDay.setHours(0, 0, 0, 0);
-      if (examDay >= today) continue;
-
-      // Find enrolledCourseUnit
-      let enrolled = await prisma.enrolledCourseUnit.findFirst({
-        where: {
-          studentId: student.id,
-          courseUnitId: unit.id
-        }
-      });
-      if (!enrolled) continue;
-
-      // Randomly decide if this student is approved (e.g., 70% chance)
-      if (Math.random() < 0.7) {
-        // Find invigilators in department
-        const deptInvigilators = await prisma.invigilator.findMany({
-          where: { departmentId: programme.course.departmentId }
-        });
-        let assignedInvigilator = deptInvigilators.length
-          ? deptInvigilators[Math.floor(Math.random() * deptInvigilators.length)]
-          : fallbackInvigilator;
-
-        await prisma.enrolledCourseUnit.update({
-          where: { id: enrolled.id },
-          data: {
-            isInvigilatorApproved: true,
-            invigilatorApprovedAt: exam.examDate,
-            approvedBy: assignedInvigilator ? assignedInvigilator.id : null
-          }
-        });
-        console.log(`Approved student ${student.firstName} for ${unit.title} on ${exam.examDate.toDateString()} by ${assignedInvigilator?.firstName || 'N/A'}`);
-      }
-    }
-  }
-
-  console.log("✅ Exams, assignments, and approvals seeded.");
+  console.log("✅ Exams, assignments, and enrollments seeded for semester TWO simulation (5 days, 1 course unit per course per day).");
 }
 
 main()

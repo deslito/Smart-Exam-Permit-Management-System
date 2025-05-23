@@ -9,30 +9,11 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
-import { useInvigilators } from "@/contexts/InvigilatorContext";
+import { useInvigilators, Invigilator } from "@/contexts/InvigilatorContext";
 import tw from "twrnc";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { invigilatorTheme } from "./_layout";
-
-// Update the Invigilator type to match InvigilatorContext
-type Invigilator = {
-  id: string;
-  title?: string;
-  firstName: string;
-  otherNames: string | null;  // Changed from optional
-  lastName: string;
-  picture: string | null;     // Changed from optional string
-  currentSemester: 'ONE' | 'TWO';  // Added specific values
-  user?: { id: string; email?: string; role?: string };
-  assignedExams?: any[];
-};
-
-interface Activity {
-  title: string;
-  description: string;
-  date: string;
-}
 
 export default function InvigilatorDashboard() {
   const router = useRouter();
@@ -47,14 +28,35 @@ export default function InvigilatorDashboard() {
   // For animated arrow rotation
   const rotateAnim = useState(new Animated.Value(0))[0];
 
-  const recentActivities: Activity[] = [
-    {
-      title: "Assigned to Exam",
-      description: "No recent assignments",
-      date: "Today",
-    },
-    // Add more as needed
-  ];
+  // --- Populate assigned exams and recent activities ---
+  // Assigned exams: show as course titles
+  // Recent activities: show as past scanned exams (course unit titles, most recent first)
+  const assignedExams = profile?.assignedExams?.map((exam: any) => ({
+    title: exam.exam?.courseUnit?.title || exam.exam?.courseUnit?.code || 'Exam',
+    date: exam.exam?.examDate ? new Date(exam.exam.examDate).toLocaleDateString() : '-',
+    venue: exam.exam?.venue || '-',
+    examDate: exam.exam?.examDate ? new Date(exam.exam.examDate) : null,
+  })) || [];
+
+  // Simulate recent scans: use assigned exams with examDate < today
+  const today = new Date();
+  const recentActivities = (profile?.assignedExams || [])
+    .filter((exam: any) => {
+      if (!exam.exam?.examDate) return false;
+      return new Date(exam.exam.examDate) < today;
+    })
+    .sort((a: any, b: any) => new Date(b.exam.examDate).getTime() - new Date(a.exam.examDate).getTime())
+    .slice(0, 5)
+    .map((exam: any) => ({
+      title: exam.exam?.courseUnit?.title || exam.exam?.courseUnit?.code || 'Exam',
+      description: 'Scanned successfully',
+      date: exam.exam?.examDate ? new Date(exam.exam.examDate).toLocaleDateString() : '-',
+    }));
+
+  // Upcoming activities: assigned exams with examDate >= today
+  const upcomingActivities = assignedExams
+    .filter(e => e.examDate && e.examDate >= today)
+    .sort((a, b) => (a.examDate && b.examDate ? a.examDate.getTime() - b.examDate.getTime() : 0));
 
   useEffect(() => {
     if (authLoading) return;
@@ -117,7 +119,6 @@ export default function InvigilatorDashboard() {
     picture,
     currentSemester,
     user: invUser,
-    assignedExams = [],
   } = profile;
 
   return (
@@ -226,7 +227,7 @@ export default function InvigilatorDashboard() {
                     <View>
                       <View style={tw`flex-row py-2 border-b border-gray-100`}>
                         <Text style={tw`flex-1 font-bold text-xs text-gray-500`}>
-                          Exam
+                          Course
                         </Text>
                         <Text style={tw`flex-1 font-bold text-xs text-gray-500`}>
                           Date
@@ -238,13 +239,13 @@ export default function InvigilatorDashboard() {
                       {assignedExams.map((exam, i) => (
                         <View key={i} style={tw`flex-row py-2 border-b border-gray-50`}>
                           <Text style={tw`flex-1 text-xs text-gray-700`}>
-                            {exam.title || "Exam"}
+                            {exam.title}
                           </Text>
                           <Text style={tw`flex-1 text-xs text-gray-700`}>
-                            {exam.date || "-"}
+                            {exam.date}
                           </Text>
                           <Text style={tw`flex-1 text-xs text-gray-700`}>
-                            {exam.venue || "-"}
+                            {exam.venue}
                           </Text>
                         </View>
                       ))}
@@ -264,14 +265,14 @@ export default function InvigilatorDashboard() {
                 onPress={() => router.push("/(invigilators)/scan")}
               >
                 <Ionicons
-                  name="clipboard-outline"
-                  size={24}
+                  name="qr-code-outline"
+                  size={28}
                   color={invigilatorTheme.primary}
                 />
                 <Text
                   style={tw`mt-2 text-sm font-medium text-[${invigilatorTheme.primary}]`}
                 >
-                  View Exams
+                  Scan
                 </Text>
               </Pressable>
               <Pressable
@@ -291,25 +292,48 @@ export default function InvigilatorDashboard() {
               </Pressable>
             </View>
 
+            {/* Upcoming Activities */}
+            <Text style={tw`text-base font-bold mb-2 text-gray-800`}>
+              Upcoming Activities
+            </Text>
+            <View style={tw`bg-white border border-gray-200 rounded-2xl p-4 shadow mb-4`}>
+              {upcomingActivities.length === 0 ? (
+                <Text style={tw`text-gray-500 text-center`}>No upcoming activities.</Text>
+              ) : (
+                upcomingActivities.map((item, idx) => (
+                  <View key={idx} style={tw`flex-row justify-between items-center mb-2`}>
+                    <View>
+                      <Text style={tw`font-medium text-sm`}>{item.title}</Text>
+                    </View>
+                    <Text style={tw`text-xs text-gray-400`}>{item.date}</Text>
+                  </View>
+                ))
+              )}
+            </View>
+
             {/* Recent Activity */}
             <Text style={tw`text-base font-bold mb-2 text-gray-800`}>
               Recent Activity
             </Text>
             <View style={tw`bg-white border border-gray-200 rounded-2xl p-4 shadow mb-6`}>
-              {recentActivities.map((item, idx) => (
-                <View
-                  key={idx}
-                  style={tw`flex-row justify-between items-center mb-2`}
-                >
-                  <View>
-                    <Text style={tw`font-medium text-sm`}>{item.title}</Text>
-                    <Text style={tw`text-xs text-gray-500`}>
-                      {item.description}
-                    </Text>
+              {recentActivities.length === 0 ? (
+                <Text style={tw`text-gray-500 text-center`}>No recent activity.</Text>
+              ) : (
+                recentActivities.map((item, idx) => (
+                  <View
+                    key={idx}
+                    style={tw`flex-row justify-between items-center mb-2`}
+                  >
+                    <View>
+                      <Text style={tw`font-medium text-sm`}>{item.title}</Text>
+                      <Text style={tw`text-xs text-gray-500`}>
+                        {item.description}
+                      </Text>
+                    </View>
+                    <Text style={tw`text-xs text-gray-400`}>{item.date}</Text>
                   </View>
-                  <Text style={tw`text-xs text-gray-400`}>{item.date}</Text>
-                </View>
-              ))}
+                ))
+              )}
             </View>
           </View>
         </View>

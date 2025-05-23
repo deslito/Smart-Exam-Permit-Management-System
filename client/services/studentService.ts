@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
-import { getToken } from './authService';
+import { getToken } from '@/services/authService';
 
 export const getAllStudents = async () => {
   try {
@@ -69,5 +69,22 @@ export const getStudentById = async (id: string) => {
       console.error('Error in request setup:', error.message);
       throw new Error('Error in request setup');
     }
+  }
+};
+
+export const approveEnrolledCourseUnit = async (enrolledCourseUnitId: string, approvedBy: string) => {
+  try {
+    const token = await getToken();
+    const res = await axios.post(
+      `${API_BASE_URL}/enrolled-course-units/${enrolledCourseUnitId}/approve`,
+      { approvedBy },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return res.data;
+  } catch (error: any) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(error.response?.data?.message || "Approval failed");
+    }
+    throw error;
   }
 };

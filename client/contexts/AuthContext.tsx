@@ -9,7 +9,7 @@ import {
   changePassword as apiChangePassword // Add this import
 } from '@/services/authService';
 
-//
+
 // Types
 //
 export interface AuthUser {

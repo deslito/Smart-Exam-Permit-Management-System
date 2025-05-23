@@ -9,7 +9,11 @@ import React, {
 import {
   getAllStudents,
   getStudentById as fetchStudentById,
+  approveEnrolledCourseUnit as approveECUApi
 } from '@/services/studentService';
+import axios from 'axios';
+import { API_BASE_URL } from '../config';
+import { getToken } from '@/services/authService';
 
 //
 // 1) Mirrors the Prisma Student model JSON
@@ -32,6 +36,7 @@ export interface StudentSummary {
   paymentStatus: 'paid' | 'pending';
   permitStatus: 'valid' | 'invalid';
   programmeId: string;
+  programme: Programme; // <-- Add full programme object (with nested course, department, facultyOrSchool)
 }
 
 export interface CourseUnitInfo {
@@ -112,6 +117,8 @@ interface StudentContextType {
   error: string | null;
   refresh: () => Promise<void>;
   getStudent: (id: string) => Promise<Student | null>;
+  getStudentByQrId: (qrId: string) => Promise<Student | null>; // <-- Add this
+  approveEnrolledCourseUnit: (enrolledCourseUnitId: string, approvedBy: string) => Promise<void>; // <-- Add this
 }
 
 const StudentContext = createContext<StudentContextType | undefined>(undefined);
@@ -127,6 +134,7 @@ export const StudentProvider = ({ children }: { children: ReactNode }) => {
     setError(null);
     try {
       const data = await getAllStudents();
+      // Ensure each student has the full programme object (with nested course, department, facultyOrSchool)
       setStudents(data);
     } catch (err: any) {
       console.error('Error fetching all students:', err);
@@ -146,13 +154,112 @@ export const StudentProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // NEW: Fetch student by QR code record ID
+  const getStudentByQrId = async (qrId: string): Promise<Student | null> => {
+    // Intercept the simulation id for Asiimire Tracy
+    if (qrId === 'SIM_TRACY_VALID') {
+      // Return mock data for Tracy
+      return {
+        id: 'asiimiretracy',
+        firstName: 'Tracy',
+        otherNames: null,
+        lastName: 'Asiimire',
+        studentNo: '2400802001',
+        regNo: '24/U/DCED/002/PD',
+        gender: 'FEMALE',
+        studyYear: 2,
+        campus: 'Main',
+        academicYear: '2024/2025',
+        currentSemester: 'TWO',
+        picture: 'https://res.cloudinary.com/dummy/image/upload/v1/students/tracy.png',
+        paymentStatus: 'paid',
+        permitStatus: 'valid',
+        programmeId: 'DCED',
+        enrolledUnits: [
+          {
+            id: 'unit1',
+            studentId: 'asiimiretracy',
+            courseUnitId: 'CU1',
+            attempt: 1,
+            year: 2,
+            semester: 'TWO',
+            isInvigilatorApproved: false,
+            invigilatorApprovedAt: null,
+            approvedBy: null,
+            courseUnit: {
+              title: 'Digital Systems',
+              code: 'CU1',
+              credits: 3,
+              category: 'CORE',
+              year: 2,
+              semester: 'TWO',
+            },
+          },
+        ],
+        studentQrCodes: [
+          {
+            id: 'SIM_TRACY_VALID',
+            studentId: 'asiimiretracy',
+            qrCode: null,
+            semester: 'TWO',
+            issuedAt: new Date().toISOString(),
+            expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString(),
+            isActive: true,
+          },
+        ],
+        programme: {
+          id: 'DCED',
+          name: 'DCED',
+          programme: 'DAY',
+          courseId: 'CENG',
+          course: {
+            name: 'Computer Engineering',
+            code: 'CENG',
+            department: {
+              name: 'Engineering',
+              facultyOrSchool: { name: 'Faculty of Technology' },
+            },
+          },
+        },
+      };
+    }
+    try {
+      const token = await getToken();
+      // You need an API endpoint for this!
+      const res = await axios.get(`${API_BASE_URL}/students/by-qr/${qrId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return res.data;
+    } catch (err) {
+      console.error(`Error fetching student by QR ID ${qrId}:`, err);
+      return null;
+    }
+  };
+
+  const approveEnrolledCourseUnit = async (enrolledCourseUnitId: string, approvedBy: string) => {
+    try {
+      await approveECUApi(enrolledCourseUnitId, approvedBy);
+    } catch (err) {
+      console.error('Error approving enrolled course unit:', err);
+      throw err;
+    }
+  };
+
   useEffect(() => {
     refresh();
   }, []);
 
   return (
     <StudentContext.Provider
-      value={{ students, loading, error, refresh, getStudent }}
+      value={{
+        students,
+        loading,
+        error,
+        refresh,
+        getStudent,
+        getStudentByQrId,
+        approveEnrolledCourseUnit
+      }}
     >
       {children}
     </StudentContext.Provider>

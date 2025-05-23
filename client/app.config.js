@@ -9,7 +9,7 @@ export default () => {
       version: "1.0.0",
       orientation: "portrait",
       userInterfaceStyle: "automatic",
-      icon: "./assets/images/icon.png",
+      icon: "./assets/images/kyambogoLogo.png",
       splash: {
         image: "./assets/images/splash-icon.png",
         resizeMode: "contain",
@@ -33,7 +33,7 @@ export default () => {
       },
       web: {
         bundler: "metro",
-        output: "static",
+        output: "server",
         favicon: "./assets/images/favicon.png",
       },
       plugins: [

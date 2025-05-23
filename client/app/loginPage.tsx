@@ -121,6 +121,21 @@ export default function LoginPage() {
     setIsLoggingIn(true);
     try {
       const authUser = await login(email, password);
+
+      // Check if the logged-in user's role matches the selected role
+      if (
+        normalizedRole &&
+        authUser.role.toLowerCase() !== normalizedRole.toLowerCase()
+      ) {
+        showToast(
+          "error",
+          "Role mismatch",
+          `You are not allowed to log in as ${normalizedRole}.`
+        );
+        setIsLoggingIn(false);
+        return;
+      }
+
       showToast("success", "Logged in", "Welcome back!");
       router.push(getRoleRoute(authUser.role));
     } catch (err: any) {
@@ -312,7 +327,7 @@ export default function LoginPage() {
                     style={{
                       color: theme.primary, // Always use theme.primary
                     }}
-                    onPress={() => router.push("./components/AdminRegister")}
+                    onPress={() => router.push("./adminRegister")}
                   >
                     Sign Up
                   </Text>

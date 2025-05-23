@@ -7,7 +7,7 @@ import {
 } from "@expo/vector-icons";
 import tw from "twrnc";
 
-type PermitStatus = "valid" | "invalid" | "expired" | "approved" | "pending";
+type PermitStatus = "valid" | "invalid" | "expired" | "approved" | "pending" | "completed";
 
 interface StatusBadgeProps {
   status: PermitStatus;
@@ -50,6 +50,11 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
       label: "INVALID",
       icon: <Entypo name="circle-with-cross" size={14} color="white" />,
       badgeStyle: tw`bg-gray-500`,
+    },
+    completed: {
+      label: "COMPLETED",
+      icon: <FontAwesome name="check-circle" size={14} color="white" />,
+      badgeStyle: tw`bg-green-800`,
     },
   };
 

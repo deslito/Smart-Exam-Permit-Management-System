@@ -1,8 +1,9 @@
-import { View, Text, Pressable, Image } from "react-native";
+import { View, Text, Pressable, Image, Platform } from "react-native";
 import { useRouter } from "expo-router";
 import BackgroundWrapper from "@/components/BackgroundWrapper";
 import HorizontalDivider from "@/components/HorizontalDivider";
 import KyambogoLogo from "@/assets/images/kyambogoLogo.png";
+import { toast } from "sonner";
 
 export default function HomePage() {
   const router = useRouter();
@@ -68,9 +69,12 @@ export default function HomePage() {
                 Get Started
               </Text>
             </Pressable>
+            {/* Show this button only on web */}
+            {/* Removed Show Web Toast button */}
           </View>
         </View>
       </View>
     </BackgroundWrapper>
   );
 }
+

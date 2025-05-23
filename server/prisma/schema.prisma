@@ -97,7 +97,6 @@ model Invigilator {
   otherNames        String?
   lastName          String
   picture           String?
-  currentSemester   Semester
   user              User             @relation(fields: [id], references: [id])
   assignedExams     ExamAssignment[]
   departmentId      String           // <-- Add this
@@ -162,6 +161,8 @@ model Exam {
   isApproved   Boolean          @default(false) // Admin approval for this exam session
   approvedAt   DateTime? // When admin approved (for 4-hour window)
   invigilators ExamAssignment[]
+
+  @@unique([courseUnitId, examDate])
 }
 
 model ExamAssignment {

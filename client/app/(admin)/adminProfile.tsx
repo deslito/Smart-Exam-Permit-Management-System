@@ -4,6 +4,7 @@ import { Ionicons, Feather } from "@expo/vector-icons";
 import tw from "twrnc";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "expo-router";
+import ChangePasswordModal from "@/components/ChangePasswordModal";
 
 const adminTheme = {
   primary: "#0057B7",
@@ -162,7 +163,11 @@ export default function AdminProfile() {
           </View>
         </View>
       </ScrollView>
-      {/* Password modal can go here if you have one */}
+      <ChangePasswordModal
+        isVisible={isPasswordModalVisible}
+        onClose={() => setIsPasswordModalVisible(false)}
+        userRole="admin"
+      />
     </View>
   );
 }

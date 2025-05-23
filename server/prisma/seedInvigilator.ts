@@ -11,8 +11,7 @@ const Invigilators = [
     regNumber: "24/STAFF/002",
     email: "nakirayisophia@kyu.edu",
     role: "invigilator" as const,
-    currentSemester: "ONE",
-    departmentId: "DE012",
+    departmentId: "DE003",
   },
   {
     id: "I654321",
@@ -23,8 +22,8 @@ const Invigilators = [
     regNumber: "24/STAFF/001",
     email: "mugishajoel@kyu.edu",
     role: "invigilator" as const,
-    currentSemester: "ONE",
-    departmentId: "DE012",
+
+    departmentId: "DE003",
   }
 ];
 
@@ -59,7 +58,6 @@ async function main() {
         lastName: inv.lastName,
         otherNames: inv.otherNames,
         picture: imageUrl,
-        currentSemester: inv.currentSemester as any,
         departmentId: inv.departmentId,
       },
     });

@@ -164,7 +164,16 @@ export default function Profile() {
               Security
             </Text>
             <View style={tw`bg-white rounded-lg border border-gray-200`}>
-              <View style={tw`flex-row justify-between items-center p-4`}>
+              <View style={[
+                tw`flex-row justify-between items-center p-4`,
+                {
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 3,
+                    elevation: 5,
+                  }
+                ]}>
                 <View>
                   <Text style={tw`font-medium text-gray-800 text-base`}>
                     Password
@@ -266,6 +275,7 @@ export default function Profile() {
       <ChangePasswordModal
         isVisible={isPasswordModalVisible}
         onClose={() => setIsPasswordModalVisible(false)}
+        userRole="student"
       />
     </View>
   );

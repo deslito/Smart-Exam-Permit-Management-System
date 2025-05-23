@@ -5,9 +5,6 @@ import { Gender } from './client'; // Add this import at the top
 import dotenv from "dotenv";
 dotenv.config();
 
-const BASE_URL = process.env.QR_BASE_URL || "http://localhost:8081/(invigilators)/qr";
-console.log("BASE_URL", BASE_URL);
-
 const students = [
   {
     email: 'asiimiretracy@gmail.com',
@@ -31,11 +28,11 @@ const students = [
     lastName: 'Mubiru',
     gender: 'MALE',
     studyYear: 2,
-    programme: 'ITCD', // Use programme code for lookup
+    programme: 'DCED', // Use programme code for lookup
     campus: 'Main',
     academicYear: '2025/2026',
     currentSemester: 'TWO',
-    paymentStatus: 'pending',
+    paymentStatus: 'paid',
     permitStatus: 'invalid',
   },
   {
@@ -44,8 +41,8 @@ const students = [
     otherNames: null,
     lastName: 'Twijukye',
     gender: 'MALE',
-    studyYear: 3,
-    programme: 'BBAD', // Use programme code for lookup
+    studyYear: 2,
+    programme: 'DCED', // Use programme code for lookup
     campus: 'Main',
     academicYear: '2025/2026',
     currentSemester: 'TWO',
@@ -59,7 +56,7 @@ const students = [
     lastName: 'Muyingo',
     gender: 'FEMALE',
     studyYear: 1,
-    programme: 'CEED',
+    programme: 'DCED',
     campus: 'Main',
     academicYear: '2025/2026',
     currentSemester: 'TWO',
@@ -173,7 +170,11 @@ async function main() {
           },
         });
 
+        const BASE_URL = process.env.QR_BASE_URL || "http://localhost:8081/(invigilators)/qr";
+        console.log("BASE_URL", BASE_URL);
+
         const qrUrl = `${BASE_URL}/${qrRecord.id}`;
+        console.log("QR URL", qrUrl);
         const qrImageDataUrl = await QRCode.toDataURL(qrUrl);
         const qrImageCloudinaryUrl = await uploadImage(qrImageDataUrl, 'student-qrcodes');
 

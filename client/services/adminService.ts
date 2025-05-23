@@ -23,3 +23,13 @@ export const getAdminById = async (id: string) => {
   });
   return res.data;
 };
+
+export async function approveExam(examId: string) {
+  const token = await getToken();
+  const res = await axios.patch(
+    `${API_BASE_URL}/admins/exams/${examId}/approve`,
+    {},
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return res.data;
+}

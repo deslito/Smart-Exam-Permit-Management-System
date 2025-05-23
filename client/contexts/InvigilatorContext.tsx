@@ -8,19 +8,25 @@ import React, {
 import {
   getAllInvigilators,
   getInvigilatorById as fetchInvigilatorById,
+  createInvigilator as createInvigilatorService,
+  updateInvigilator as updateInvigilatorService,
+  deleteInvigilator as deleteInvigilatorService,
 } from '@/services/invigilatorService';
-
-// 1) Mirrors the Prisma Invigilator model JSON
 
 // Summary invigilator (for getAllInvigilators)
 export interface InvigilatorSummary {
   id: string;
+  invigilatorNumber: string;
   title: string;
   firstName: string;
-  otherNames: string | null;
+  otherNames?: string | null;
   lastName: string;
-  picture: string | null;
-  currentSemester: 'ONE' | 'TWO';
+  picture?: string;
+  currentSemester?: string;
+  departmentId: string;
+  user: {
+    email: string;
+  };
 }
 
 // User info for detailed invigilator
@@ -29,6 +35,7 @@ export interface InvigilatorUser {
   email: string;
   password: string;
   role: string;
+  picture: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -76,6 +83,9 @@ interface InvigilatorContextType {
   error: string | null;
   refresh: () => Promise<void>;
   getInvigilator: (id: string) => Promise<Invigilator | null>;
+  createInvigilator: (data: any) => Promise<void>; // add
+  updateInvigilator: (id: string, data: any) => Promise<void>; // add
+  deleteInvigilator: (id: string) => Promise<void>; // add
 }
 
 const InvigilatorContext = createContext<InvigilatorContextType | undefined>(undefined);
@@ -110,13 +120,37 @@ export const InvigilatorProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const createInvigilator = async (data: any) => {
+    await createInvigilatorService(data);
+    await refresh();
+  };
+
+  const updateInvigilator = async (id: string, data: any) => {
+    await updateInvigilatorService(id, data);
+    await refresh();
+  };
+
+  const deleteInvigilator = async (id: string) => {
+    await deleteInvigilatorService(id);
+    await refresh();
+  };
+
   useEffect(() => {
     refresh();
   }, []);
 
   return (
     <InvigilatorContext.Provider
-      value={{ invigilators, loading, error, refresh, getInvigilator }}
+      value={{
+        invigilators,
+        loading,
+        error,
+        refresh,
+        getInvigilator,
+        createInvigilator,
+        updateInvigilator,
+        deleteInvigilator,
+      }}
     >
       {children}
     </InvigilatorContext.Provider>

@@ -1050,7 +1050,7 @@ const courses: CourseSeed[] = [
   {
     code: "DCE100",
     name: "Computer Engineering",
-    departmentId: "DE012",
+    departmentId: "DE003",
     type: "Diploma",
   },
   {
