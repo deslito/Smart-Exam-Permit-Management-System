@@ -36,6 +36,7 @@ async function main() {
   const examDates = getExamDates(3);
 
   for (const student of students) {
+    let enrolledCount = 0;
     const programme = student.programme;
     if (!programme || !programme.course) continue;
 
@@ -110,9 +111,15 @@ async function main() {
               approvedBy,
             },
           });
+          enrolledCount++;
         }
       }
     }
+
+    console.log(`Student: ${student.firstName} ${student.lastName}`);
+    console.log(`Reg No: ${student.regNo}`);
+    console.log(`Course Units Enrolled: ${enrolledCount}`);
+    console.log('------------------------');
   }
 
   console.log("✅ EnrolledCourseUnits seeded for all students and all course units up to their current year/semester, with approval simulation.");

@@ -1,5 +1,5 @@
 import { Platform } from "react-native";
-import { toast as sonnerToast } from "sonner";
+import { toast as toastify } from "react-toastify";
 import Toast from "react-native-toast-message";
 
 export type ToastType = "success" | "error" | "info" | "warning";
@@ -7,23 +7,18 @@ export type ToastType = "success" | "error" | "info" | "warning";
 export const useToast = () => {
   const showToast = (type: ToastType, message: string, subtext?: string) => {
     if (Platform.OS === "web") {
-      const options = {
-        duration: 3000,
-        position: "bottom-right" as const,
-      };
-
       switch (type) {
         case "success":
-          sonnerToast.success(message, options);
+          toastify.success(message);
           break;
         case "error":
-          sonnerToast.error(message, options);
+          toastify.error(message);
           break;
         case "warning":
-          sonnerToast.warning(message, options);
+          toastify.warn(message);
           break;
         case "info":
-          sonnerToast.info(message, options);
+          toastify.info(message);
           break;
       }
     } else {

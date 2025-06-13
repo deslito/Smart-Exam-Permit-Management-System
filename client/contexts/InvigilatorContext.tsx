@@ -81,17 +81,19 @@ interface InvigilatorContextType {
   invigilators: InvigilatorSummary[];
   loading: boolean;
   error: string | null;
+  currentInvigilator: InvigilatorSummary | null;  // Add this
   refresh: () => Promise<void>;
   getInvigilator: (id: string) => Promise<Invigilator | null>;
-  createInvigilator: (data: any) => Promise<void>; // add
-  updateInvigilator: (id: string, data: any) => Promise<void>; // add
-  deleteInvigilator: (id: string) => Promise<void>; // add
+  createInvigilator: (data: any) => Promise<void>;
+  updateInvigilator: (id: string, data: any) => Promise<void>;
+  deleteInvigilator: (id: string) => Promise<void>;
 }
 
 const InvigilatorContext = createContext<InvigilatorContextType | undefined>(undefined);
 
 export const InvigilatorProvider = ({ children }: { children: ReactNode }) => {
   const [invigilators, setInvigilators] = useState<InvigilatorSummary[]>([]);
+  const [currentInvigilator, setCurrentInvigilator] = useState<InvigilatorSummary | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -140,18 +142,17 @@ export const InvigilatorProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <InvigilatorContext.Provider
-      value={{
-        invigilators,
-        loading,
-        error,
-        refresh,
-        getInvigilator,
-        createInvigilator,
-        updateInvigilator,
-        deleteInvigilator,
-      }}
-    >
+    <InvigilatorContext.Provider value={{
+      invigilators,
+      loading,
+      error,
+      currentInvigilator,
+      refresh,
+      getInvigilator,
+      createInvigilator,
+      updateInvigilator,
+      deleteInvigilator,
+    }}>
       {children}
     </InvigilatorContext.Provider>
   );

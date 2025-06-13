@@ -1,19 +1,111 @@
 import { Asset } from 'expo-asset';
 import * as FileSystem from 'expo-file-system';
+import { Platform } from 'react-native';
 import { PermitData } from "./PermitData";
 import KyambogoLogo from "@/assets/images/kyambogoLogo.png";
+import QRCodeSVG from "qrcode-svg";
+
+// Cross-platform base64 encoding for SVG
+function encodeBase64(str: string): string {
+  if (typeof window !== 'undefined' && window.btoa) {
+    // Web
+    return window.btoa(unescape(encodeURIComponent(str)));
+  } else if (typeof global !== 'undefined' && global.Buffer) {
+    // Node.js (not used in Expo/React Native)
+    return global.Buffer.from(str, 'utf-8').toString('base64');
+  } else {
+    // Fallback: simple JS base64 (works for ASCII)
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+    let encoded = '';
+    let c1, c2, c3;
+    let i = 0;
+    while (i < str.length) {
+      c1 = str.charCodeAt(i++);
+      c2 = str.charCodeAt(i++);
+      c3 = str.charCodeAt(i++);
+      encoded += chars.charAt(c1 >> 2);
+      encoded += chars.charAt(((c1 & 3) << 4) | (c2 >> 4));
+      if (isNaN(c2)) {
+        encoded += '==';
+        break;
+      }
+      encoded += chars.charAt(((c2 & 15) << 2) | (c3 >> 6));
+      if (isNaN(c3)) {
+        encoded += '=';
+        break;
+      }
+      encoded += chars.charAt(c3 & 63);
+    }
+    return encoded;
+  }
+}
 
 export const generatePermitHtml = async (permitData: PermitData) => {
-  // Convert logo to base64
-  try {
-    const asset = Asset.fromModule(KyambogoLogo);
-    await asset.downloadAsync();
-    const base64Logo = await FileSystem.readAsStringAsync(asset.localUri!, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
-    const logoBase64 = `data:image/png;base64,${base64Logo}`;
+  let logoSrc = '';
+  let logoLoaded = false;
+  if (Platform.OS === 'web') {
+    // On web, use the public URL for the logo asset (served from public/)
+    logoSrc = `${window.location.origin}/kyambogoLogo.png`;
+    logoLoaded = true;
+  } else {
+    // On native, use base64 encoding
+    try {
+      const asset = Asset.fromModule(KyambogoLogo);
+      await asset.downloadAsync();
+      if (asset.localUri) {
+        const base64Logo = await FileSystem.readAsStringAsync(asset.localUri, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        logoSrc = `data:image/png;base64,${base64Logo}`;
+        logoLoaded = true;
+      } else {
+        console.error('Logo asset localUri is undefined. Skipping logo in PDF.');
+        logoSrc = '';
+      }
+    } catch (error) {
+      console.error('Error loading logo for PDF:', error);
+      logoSrc = '';
+    }
+  }
 
-    return `
+  // Fallback: If logo failed to load, show a placeholder or fallback UI in the PDF
+  const logoImgTag = logoLoaded
+    ? `<img src="${logoSrc}" class="logo" alt="University Logo" />`
+    : `<div class="logo" style="width:80px;height:80px;background:#e5e7eb;border-radius:8px;display:inline-block;"></div>`;
+  const watermarkImgTag = logoLoaded
+    ? `<img src="${logoSrc}" class="watermark" alt="" />`
+    : '';
+
+  // Ensure student photo is absolute URL if on web and not already absolute
+  let studentPhoto = permitData.photoUrl || '';
+  if (Platform.OS === 'web' && studentPhoto && !/^https?:\/\//.test(studentPhoto)) {
+    studentPhoto = `${window.location.origin}${studentPhoto.startsWith('/') ? '' : '/'}${studentPhoto}`;
+  }
+
+  // Generate QR code SVG from UUID
+  let qrCodeImgTag = "";
+  if (permitData.qrCode) {
+    const qrSvg = new QRCodeSVG({
+      content: permitData.qrCode,
+      width: 150,
+      height: 150,
+      padding: 0,
+      ecl: 'M',
+    });
+    const svgString = qrSvg.svg();
+    // Use cross-platform base64 encoding
+    const svgBase64 = encodeBase64(svgString);
+    const qrDataUrl = `data:image/svg+xml;base64,${svgBase64}`;
+    qrCodeImgTag = `
+      <div class="qr-code">
+        <img src="${qrDataUrl}" width="150" height="150" alt="QR Code" />
+        <p style="margin:5px 0;color:#666;font-size:12px;">Scan to verify</p>
+        <p style="margin:0;color:#aaa;font-size:10px;">QR UUID: ${permitData.qrCode}</p>
+      </div>
+    `;
+  }
+
+  return `
     <html>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -47,7 +139,7 @@ export const generatePermitHtml = async (permitData: PermitData) => {
             width: 80px; 
             height: auto;
           }
-          .student-info { 
+          .student-info {
             position: relative;
             display: flex; 
             margin: 15px 0;
@@ -62,6 +154,11 @@ export const generatePermitHtml = async (permitData: PermitData) => {
             height: 80px;
             border-radius: 50%;
             overflow: hidden;
+          }
+          .photo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
           }
           .info-grid { 
             display: grid; 
@@ -137,10 +234,10 @@ export const generatePermitHtml = async (permitData: PermitData) => {
         </style>
       </head>
       <body>
-        <img src="${logoBase64}" class="watermark" alt="" />
+        ${watermarkImgTag}
         <div class="header">
-          <img src="${logoBase64}" class="logo" alt="University Logo" />
-          <h1 style="color:#228b22;margin:10px 0;font-size:1.5em;">Kyambogo University</h1>
+          ${logoImgTag}
+          <h1 style="color:#0057b7;margin:10px 0;font-size:1.5em;">Kyambogo University</h1>
           <p style="color:#16a34a;margin:0;font-size:0.9em;">Knowledge and Skills for Service</p>
         </div>
 
@@ -205,12 +302,7 @@ export const generatePermitHtml = async (permitData: PermitData) => {
           </table>
         </div>
 
-        ${permitData.qrCode ? `
-          <div class="qr-code">
-            <img src="${permitData.qrCode}" width="150" height="150" alt="QR Code" />
-            <p style="margin:5px 0;color:#666;font-size:12px;">Scan to verify</p>
-          </div>
-        ` : ''}
+        ${qrCodeImgTag}
 
         <div class="instructions">
           <h3 style="color:#228b22;margin-top:0;">Instructions:</h3>
@@ -229,8 +321,4 @@ export const generatePermitHtml = async (permitData: PermitData) => {
       </body>
     </html>
   `;
-  } catch (error) {
-    console.error('Error generating PDF:', error);
-    throw new Error('Failed to generate PDF');
-  }
 };

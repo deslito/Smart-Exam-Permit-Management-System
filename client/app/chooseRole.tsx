@@ -16,7 +16,7 @@ import { BlurView } from "expo-blur";
 const neuromorphicShadow = {
   shadowColor: "#000",
   shadowOffset: { width: 4, height: 4 },
-  shadowOpacity: 0.10,
+  shadowOpacity: 0.1,
   shadowRadius: 12,
   elevation: 8,
 };
@@ -72,35 +72,33 @@ export default function ChooseRolePage() {
   // Role-specific themes
   const roleThemes = {
     admin: {
-      primary: "#0057B7",      // Blue from logo
-      hover: "#003366",        // Dark blue from logo
+      primary: "#0057B7", // Blue from logo
+      hover: "#003366", // Dark blue from logo
       bg: "#f0f8ff",
-      accent: "#FFE600",       // Yellow highlight
+      accent: "#FFE600", // Yellow highlight
       cardBg: "#0057B7",
       cardText: "#fff",
     },
     invigilator: {
-      primary: "#F7941D",      // Orange from logo
-      hover: "#B6D531",        // Green from logo
+      primary: "#F7941D", // Orange from logo
+      hover: "#B6D531", // Green from logo
       bg: "#fff8f0",
-      accent: "#003366",       // Dark blue
+      accent: "#003366", // Dark blue
       cardBg: "#F7941D",
       cardText: "#fff",
     },
     student: {
-      primary: "#B6D531",      // Green from logo
-      hover: "#0057B7",        // Blue from logo
+      primary: "#B6D531", // Green from logo
+      hover: "#0057B7", // Blue from logo
       bg: "#f0fff0",
-      accent: "#003366",       // Dark blue
+      accent: "#003366", // Dark blue
       cardBg: "#B6D531",
-      cardText: "#003366",     // Use dark blue for contrast
+      cardText: "#003366", // Use dark blue for contrast
     },
   };
 
   const theme =
-    hovered && roleThemes[hovered]
-      ? roleThemes[hovered]
-      : { bg: "#ffffff" };
+    hovered && roleThemes[hovered] ? roleThemes[hovered] : { bg: "#ffffff" };
 
   const onSelect = (roleKey: RoleKey) => {
     const role = roles.find((r) => r.key === roleKey);
@@ -129,14 +127,27 @@ export default function ChooseRolePage() {
         <BlurView
           intensity={10}
           tint="light"
-          style={tw`w-full max-w-3xl py-10 px-6 rounded-2xl shadow-md space-y-5 border border-white/30`}
+          style={[
+            tw`w-full max-w-3xl py-10 px-6 rounded-2xl shadow-md my-5 border border-white/30`,
+            {
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.3,
+              shadowRadius: 3,
+              elevation: 5,
+            },
+          ]}
         >
           <Text className="z-10 text-3xl font-bold text-university-navy text-center mb-6">
             Choose Your Role
           </Text>
           <View
             className="w-11/12 mx-auto items-center"
-            style={Platform.OS === "ios" || Platform.OS === "android" ? { gap: 28 } : { gap: 16 }}
+            style={
+              Platform.OS === "ios" || Platform.OS === "android"
+                ? { gap: 28 }
+                : { gap: 16 }
+            }
           >
             {roles.map((r) => {
               const isHovered = hovered === r.key;
@@ -178,6 +189,11 @@ export default function ChooseRolePage() {
                       neuromorphicShadow,
                       {
                         backgroundColor: cardBg,
+                        shadowColor: "#000",
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.3,
+                        shadowRadius: 3,
+                        elevation: 5,
                       },
                     ]}
                   >
@@ -195,7 +211,14 @@ export default function ChooseRolePage() {
                           {r.title}
                         </Text>
                       </View>
-                      <View style={{ backgroundColor: "rgba(255,255,255,0.2)", paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999 }}>
+                      <View
+                        style={{
+                          backgroundColor: "rgba(255,255,255,0.2)",
+                          paddingHorizontal: 8,
+                          paddingVertical: 2,
+                          borderRadius: 999,
+                        }}
+                      >
                         <Text
                           style={{
                             fontSize: 12,

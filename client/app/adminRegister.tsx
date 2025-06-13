@@ -84,14 +84,14 @@ export default function AdminRegister() {
         className="flex-1 justify-center items-center px-6"
       >
         <View className="w-full max-w-md" style={{ flexGrow: 1, justifyContent: "center" }}>
-          <View className="items-center mb-8 space-y-2">
+          <View className="items-center mb-8 my-2">
             <Text className="text-3xl font-bold" style={{ color: theme.primary }}>
               Admin Registration
             </Text>
             <Text className="text-base text-gray-600">Create a new admin account</Text>
           </View>
 
-          <View className="bg-white p-6 rounded-2xl shadow-md space-y-5"
+          <View className="bg-white p-6 rounded-2xl shadow-md my-5"
             style={{
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 2 },

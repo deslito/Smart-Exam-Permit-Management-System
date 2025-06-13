@@ -32,7 +32,10 @@ export default function Profile() {
   // Helper for scaling on mobile
   const handlePressIn = (scaleRef: Animated.Value, scaleTo: number) => {
     if (Platform.OS !== "web") {
-      Animated.spring(scaleRef, { toValue: scaleTo, useNativeDriver: true }).start();
+      Animated.spring(scaleRef, {
+        toValue: scaleTo,
+        useNativeDriver: true,
+      }).start();
     }
   };
   const handlePressOut = (scaleRef: Animated.Value) => {
@@ -163,17 +166,19 @@ export default function Profile() {
             <Text style={tw`text-lg font-bold text-gray-800 mb-4`}>
               Security
             </Text>
-            <View style={tw`bg-white rounded-lg border border-gray-200`}>
-              <View style={[
-                tw`flex-row justify-between items-center p-4`,
+            <View
+              style={[
+                tw`bg-white rounded-lg p-4 shadow-sm`,
                 {
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 3,
-                    elevation: 5,
-                  }
-                ]}>
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 3,
+                  elevation: 5,
+                },
+              ]}
+            >
+              <View style={tw`flex-row justify-between items-center`}>
                 <View>
                   <Text style={tw`font-medium text-gray-800 text-base`}>
                     Password
@@ -187,40 +192,51 @@ export default function Profile() {
                     style={({ hovered, pressed }) => [
                       tw`flex-row items-center px-4 py-2 rounded-lg`,
                       {
-                        backgroundColor: hovered || pressed ? "#e6ffe6" : "#f0fff0",
+                        backgroundColor:
+                          hovered || pressed ? "#e6ffe6" : "#f0fff0",
                         transform: [{ scale: hovered || pressed ? 1.1 : 1 }],
                         minWidth: 120,
+                        shadowColor: "#000",
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.25,
+                        shadowRadius: 4,
+                        elevation: 6,
                       },
                     ]}
                     onPress={() => setIsPasswordModalVisible(true)}
                   >
-                    <Feather name="lock" size={16} color="#228b22" style={tw`mr-2`} />
+                    <Feather
+                      name="lock"
+                      size={16}
+                      color="#228b22"
+                      style={tw`mr-2`}
+                    />
                     <Text style={tw`text-[#228b22] font-medium`}>Change</Text>
                   </Pressable>
                 ) : (
-                  <Animated.View style={{ transform: [{ scale: changeScale }] }}>
-                    <Pressable
-                      onPress={() => setIsPasswordModalVisible(true)}
-                      onPressIn={() => {
-                        setIsChangePressed(true);
-                        handlePressIn(changeScale, 1.1);
-                      }}
-                      onPressOut={() => {
-                        setIsChangePressed(false);
-                        handlePressOut(changeScale);
-                      }}
-                      style={[
-                        tw`flex-row items-center px-4 py-2 rounded-lg`,
-                        {
-                          backgroundColor: isChangePressed ? "#e6ffe6" : "#f0fff0",
-                          minWidth: 120,
-                        },
-                      ]}
-                    >
-                      <Feather name="lock" size={16} color="#228b22" style={tw`mr-2`} />
-                      <Text style={tw`text-[#228b22] font-medium`}>Change</Text>
-                    </Pressable>
-                  </Animated.View>
+                  <Pressable
+                    style={[
+                      tw`flex-row items-center px-4 py-2 rounded-lg`,
+                      {
+                        backgroundColor: "#f0fff0",
+                        minWidth: 120,
+                        shadowColor: "#000",
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.25,
+                        shadowRadius: 4,
+                        elevation: 6,
+                      },
+                    ]}
+                    onPress={() => setIsPasswordModalVisible(true)}
+                  >
+                    <Feather
+                      name="lock"
+                      size={16}
+                      color="#228b22"
+                      style={tw`mr-2`}
+                    />
+                    <Text style={tw`text-[#228b22] font-medium`}>Change</Text>
+                  </Pressable>
                 )}
               </View>
             </View>
@@ -237,11 +253,18 @@ export default function Profile() {
                     backgroundColor: hovered || pressed ? "#e6ffe6" : "#fff",
                     borderColor: "#ef4444",
                     transform: [{ scale: hovered || pressed ? 1.02 : 1 }],
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 4,
+                    elevation: 6,
                   },
                 ]}
               >
                 <Feather name="log-out" size={20} color="#ef4444" />
-                <Text style={[tw`ml-2 font-medium`, { color: "#ef4444" }]}>Logout</Text>
+                <Text style={[tw`ml-2 font-medium`, { color: "#ef4444" }]}>
+                  Logout
+                </Text>
               </Pressable>
             ) : (
               <Animated.View style={{ transform: [{ scale: logoutScale }] }}>
@@ -260,11 +283,18 @@ export default function Profile() {
                     {
                       backgroundColor: isLogoutPressed ? "#e6ffe6" : "#fff",
                       borderColor: "#ef4444",
+                      shadowColor: "#000",
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.25,
+                      shadowRadius: 4,
+                      elevation: 6,
                     },
                   ]}
                 >
                   <Feather name="log-out" size={20} color="#ef4444" />
-                  <Text style={[tw`ml-2 font-medium`, { color: "#ef4444" }]}>Logout</Text>
+                  <Text style={[tw`ml-2 font-medium`, { color: "#ef4444" }]}>
+                    Logout
+                  </Text>
                 </Pressable>
               </Animated.View>
             )}

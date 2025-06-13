@@ -5,7 +5,7 @@ import Animated, { FadeIn } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 
 const glassClasses =
-  "backdrop-blur-lg bg-white/60 border border-white/40 rounded-xl shadow-glass px-4 py-3 max-w-[90%] self-center flex-row items-start space-x-3";
+  "backdrop-blur-lg bg-white/60 border border-white/40 rounded-xl shadow-glass px-4 py-3 max-w-[90%] self-center flex-row items-start mx-3";
 
 const toastTextBase = "text-[16px] font-semibold";
 const toastSubtextBase = "text-[14px] text-foreground/80";

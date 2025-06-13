@@ -147,7 +147,7 @@ async function main() {
     });
     console.log(`Seeded student: ${s.firstName} (${user.id}) | studentNo: ${studentNo} | regNo: ${regNo}`);
 
-    // QR code logic for paid students (unchanged)
+    // QR code logic for paid students (store UUID, not QR image)
     if (s.paymentStatus === 'paid') {
       const existingQr = await prisma.studentQrCode.findUnique({
         where: {
@@ -159,32 +159,23 @@ async function main() {
       });
 
       if (!existingQr) {
+        // Store only the UUID (qrRecord.id) in qrCode field
         const qrRecord = await prisma.studentQrCode.create({
           data: {
             studentId: user.id,
-            qrCode: '',
+            qrCode: '', // will update below
             semester: s.currentSemester as any,
             issuedAt: new Date(),
             expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
             isActive: true,
           },
         });
-
-        // Use QR_CODE_BASE_URL from server/.env and include the full invigilator QR path
-        const BASE_URL = process.env.QR_CODE_BASE_URL || "http://localhost:8081/(invigilators)/qr";
-        console.log("BASE_URL", BASE_URL);
-
-        const qrUrl = `${BASE_URL}/${qrRecord.id}`;
-        console.log("QR URL", qrUrl);
-        const qrImageDataUrl = await QRCode.toDataURL(qrUrl);
-        const qrImageCloudinaryUrl = await uploadImage(qrImageDataUrl, 'student-qrcodes');
-
+        // Save the UUID as the qrCode value
         await prisma.studentQrCode.update({
           where: { id: qrRecord.id },
-          data: { qrCode: qrImageCloudinaryUrl },
+          data: { qrCode: qrRecord.id },
         });
-
-        console.log(`✅ QR code generated and uploaded for: ${s.firstName} (${user.id})`);
+        console.log(`✅ Stored QR UUID for: ${s.firstName} (${user.id}) -> ${qrRecord.id}`);
       }
     }
   }

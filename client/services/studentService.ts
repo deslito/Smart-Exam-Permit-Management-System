@@ -72,19 +72,107 @@ export const getStudentById = async (id: string) => {
   }
 };
 
-export const approveEnrolledCourseUnit = async (enrolledCourseUnitId: string, approvedBy: string) => {
+export const approveEnrolledCourseUnit = async (enrolledCourseUnitId: string, invigilatorId: string) => {
   try {
     const token = await getToken();
     const res = await axios.post(
-      `${API_BASE_URL}/enrolled-course-units/${enrolledCourseUnitId}/approve`,
-      { approvedBy },
+      `${API_BASE_URL}/students/enrolled-course-units/${enrolledCourseUnitId}/approve`,
+      { invigilatorId },
       { headers: { Authorization: `Bearer ${token}` } }
     );
     return res.data;
   } catch (error: any) {
     if (axios.isAxiosError(error)) {
-      throw new Error(error.response?.data?.message || "Approval failed");
+      if (error.response?.status === 404) {
+        throw new Error('Enrolled course unit not found');
+      }
+      if (error.response?.status === 401) {
+        throw new Error('Unauthorized: Please log in again');
+      }
+      if (error.response?.status === 403) {
+        throw new Error('Access denied: insufficient permissions');
+      }
+      if (error.response?.status === 400) {
+        throw new Error(error.response.data?.message || 'Invalid request');
+      }
+      console.error('Error approving course unit:', error.response?.data);
+      throw new Error(error.response?.data?.message || 'Approval failed');
     }
-    throw error;
+    console.error('Unexpected error:', error);
+    throw new Error('An unexpected error occurred');
+  }
+};
+
+// Add this new function
+export const getStudentByQrId = async (qrId: string) => {
+  try {
+    const token = await getToken();
+    const res = await axios.get(`${API_BASE_URL}/students/by-qr/${qrId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return res.data;
+  } catch (error: any) {
+    if (axios.isAxiosError(error)) {
+      if (error.response?.status === 404) {
+        throw new Error('Student not found with this QR code');
+      }
+      if (error.response?.status === 401) {
+        throw new Error('Unauthorized: Please log in again');
+      }
+      if (error.response?.status === 403) {
+        throw new Error('Access denied: insufficient permissions');
+      }
+      console.error('Error fetching student by QR:', error.response?.data);
+      throw new Error(error.response?.data?.message || 'Failed to fetch student');
+    }
+    console.error('Unexpected error:', error);
+    throw new Error('An unexpected error occurred');
+  }
+};
+
+export const getStudentExamsByQrIdAndDate = async (qrId: string, date: string) => {
+  try {
+    const token = await getToken();
+    console.log('Fetching exams for QR:', qrId, 'date:', date);
+    const res = await axios.get(`${API_BASE_URL}/students/exams-by-date-qr/${qrId}?date=${date}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    console.log('API Response:', JSON.stringify(res.data, null, 2));
+    return res.data;
+  } catch (error: any) {
+    if (axios.isAxiosError(error)) {
+      if (error.response?.status === 404) {
+        throw new Error('No exams found for this date');
+      }
+      if (error.response?.status === 401) {
+        throw new Error('Unauthorized: Please log in again');
+      }
+      if (error.response?.status === 403) {
+        throw new Error('Access denied: insufficient permissions');
+      }
+      console.error('Error fetching exams by QR and date:', error.response?.data);
+      throw new Error(error.response?.data?.message || 'Failed to fetch exams');
+    }
+    console.error('Unexpected error:', error);
+    throw new Error('An unexpected error occurred');
+  }
+};
+
+export const getStudentsApprovedByInvigilator = async (invigilatorId: string) => {
+  try {
+    const token = await getToken();
+    const res = await axios.get(`${API_BASE_URL}/students/approved-by-invigilator/${invigilatorId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return res.data;
+  } catch (error: any) {
+    console.error('Error fetching approved students:', error);
+    throw new Error(error.response?.data?.message || 'Failed to fetch approved students');
   }
 };

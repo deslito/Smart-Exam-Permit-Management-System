@@ -3,12 +3,10 @@ import {
   View,
   Text,
   Pressable,
-  Modal,
   ActivityIndicator,
   SafeAreaView,
   Platform,
-  Animated,
-  Easing,
+  Modal,
 } from "react-native";
 import { useRouter } from "expo-router";
 import tw from "twrnc";
@@ -16,9 +14,17 @@ import Toast from "react-native-toast-message";
 import { toastConfig } from "@/components/ui/customToast";
 import { invigilatorTheme } from "./_layout";
 import { Camera, CameraView, BarcodeScanningResult } from "expo-camera";
-import * as Linking from 'expo-linking';
-import { useStudents } from "@/contexts/StudentContext";
-import { QR_CODE_BASE_URL } from "../../config";
+import { useStudents, EnrolledUnit, Student } from "@/contexts/StudentContext";
+import type { Exam } from "@/contexts/AdminContext";
+import { StudentScanDetails } from "@/components/StudentScanDetails";
+import { Html5Qrcode } from "html5-qrcode";
+import { getStudentExamsByQrIdAndDate } from "@/services/studentService";
+import { NoExamToday } from "@/components/NoExamToday";
+import { useAuth } from "@/contexts/AuthContext";
+import { useInvigilators } from "@/contexts/InvigilatorContext";
+import DesktopScanWarning from "@/components/invigilators/DesktopScanWarning";
+import WaitingForApprovalModal from "@/components/invigilators/WaitingForApprovalModal";
+import ApprovalTimeExpiredModal from "@/components/invigilators/ApprovalTimeExpiredModal";
 
 // Helper function for mobile detection
 const isMobile = () => {
@@ -26,327 +32,387 @@ const isMobile = () => {
   return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 };
 
-// --- FuturisticDangerTriangleLoaderV2 component ---
-function FuturisticDangerTriangleLoaderV2() {
-  // Three animated dots orbiting a triangle, with a pulsing neon triangle and exclamation
-  const rotateAnim = useRef(new Animated.Value(0)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-  useEffect(() => {
-    Animated.loop(
-      Animated.timing(rotateAnim, {
-        toValue: 1,
-        duration: 2200,
-        useNativeDriver: true,
-        easing: Easing.linear,
-      })
-    ).start();
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.15, duration: 900, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1, duration: 900, useNativeDriver: true }),
-      ])
-    ).start();
-  }, []);
-  const rotate = rotateAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
-  return (
-    <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: 12 }}>
-      <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-        {/* Neon triangle */}
-        <View style={{ width: 120, height: 120, alignItems: 'center', justifyContent: 'center' }}>
-          <View style={{
-            width: 0,
-            height: 0,
-            borderLeftWidth: 60,
-            borderRightWidth: 60,
-            borderBottomWidth: 104,
-            borderLeftColor: 'transparent',
-            borderRightColor: 'transparent',
-            borderBottomColor: invigilatorTheme.primary,
-            opacity: 0.18,
-            position: 'absolute',
-            top: 0,
-          }} />
-          {/* Neon border triangle (simulate with 3 lines) */}
-          <View style={{ position: 'absolute', top: 10, left: 10, right: 10, bottom: 10 }}>
-            {/* Top border */}
-            <View style={{ position: 'absolute', top: 0, left: 28, width: 44, height: 4, borderRadius: 2, backgroundColor: invigilatorTheme.primary, shadowColor: invigilatorTheme.primary, shadowOpacity: 0.7, shadowRadius: 8, elevation: 8 }} />
-            {/* Left border */}
-            <View style={{ position: 'absolute', left: 0, top: 8, width: 4, height: 64, borderRadius: 2, backgroundColor: '#00ffb2', shadowColor: '#00ffb2', shadowOpacity: 0.7, shadowRadius: 8, elevation: 8, transform: [{ rotate: '-60deg' }] }} />
-            {/* Right border */}
-            <View style={{ position: 'absolute', right: 0, top: 8, width: 4, height: 64, borderRadius: 2, backgroundColor: '#ff00e0', shadowColor: '#ff00e0', shadowOpacity: 0.7, shadowRadius: 8, elevation: 8, transform: [{ rotate: '60deg' }] }} />
-          </View>
-          {/* Exclamation mark with neon glow */}
-          <Text style={{ color: invigilatorTheme.primary, fontWeight: 'bold', fontSize: 54, textShadowColor: '#fff', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 16, position: 'absolute', top: 38, left: 0, right: 0, textAlign: 'center', zIndex: 2 }}>!</Text>
-          {/* Animated orbiting dots */}
-          <Animated.View style={{ position: 'absolute', width: 120, height: 120, alignItems: 'center', justifyContent: 'center', transform: [{ rotate }] }}>
-            {[0, 1, 2].map(i => {
-              const angle = (i * 2 * Math.PI) / 3;
-              const x = 48 * Math.cos(angle);
-              const y = 48 * Math.sin(angle);
-              return (
-                <View key={i} style={{ position: 'absolute', left: 60 + x - 8, top: 60 + y - 8, width: 16, height: 16, borderRadius: 8, backgroundColor: i === 0 ? invigilatorTheme.primary : (i === 1 ? '#00ffb2' : '#ff00e0'), shadowColor: '#fff', shadowOpacity: 0.7, shadowRadius: 8, elevation: 8, borderWidth: 2, borderColor: '#fff' }} />
-              );
-            })}
-          </Animated.View>
+// Loader modal for after scanning
+const LoaderModal = ({
+  visible,
+  message,
+}: {
+  visible: boolean;
+  message: string;
+}) => (
+  <Modal
+    transparent
+    visible={visible}
+    animationType="fade"
+    onRequestClose={() => {}}
+  >
+    <View style={tw`flex-1 bg-black bg-opacity-50 justify-center items-center`}>
+      <View
+        style={tw`bg-white p-6 rounded-lg w-11/12 max-w-md m-4 items-center`}
+      >
+        <View
+          style={tw`bg-[${invigilatorTheme.primary}] w-full rounded-t-lg mb-6`}
+        >
+          <Text style={tw`text-white text-xl font-bold text-center py-4`}>
+            {message}
+          </Text>
         </View>
-      </Animated.View>
+        <ActivityIndicator size="large" color={invigilatorTheme.primary} />
+        <Text style={tw`mt-4 text-gray-600 text-center`}>Please wait...</Text>
+      </View>
     </View>
-  );
-}
+  </Modal>
+);
 
 export default function ScanQRPage() {
   const router = useRouter();
-  const { students } = useStudents(); // get all students from context
+  const { getStudentByQrId, approveEnrolledCourseUnit } = useStudents();
+  const { user } = useAuth();
+  const { getInvigilator } = useInvigilators();
+  const [invigilatorProfile, setInvigilatorProfile] = useState<any>(null);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [scanned, setScanned] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [scanData, setScanData] = useState<string | null>(null);
-
-  // For html5-qrcode
+  const [student, setStudent] = useState<Student | null>(null);
+  const [isApproving, setIsApproving] = useState(false);
+  const [noExamModalVisible, setNoExamModalVisible] = useState(false);
+  const [waitingForApprovalVisible, setWaitingForApprovalVisible] = useState(false);
+  const [approvalExpiredVisible, setApprovalExpiredVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState(
+    "Checking Student & Exam"
+  );
+  const [currentExam, setCurrentExam] = useState<Exam | null>(null);
   const html5QrRef = useRef<HTMLDivElement>(null);
   const [html5QrLoaded, setHtml5QrLoaded] = useState(false);
+  const [approvedUnit, setApprovedUnit] = useState<EnrolledUnit | null>(null);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
 
-  // Native mobile: ask for camera permission
+  // Fetch invigilator profile on component mount
   useEffect(() => {
-    if (Platform.OS !== "web") {
-      (async () => {
-        const { status } = await Camera.requestCameraPermissionsAsync();
-        setHasPermission(status === "granted");
-      })();
+    if (user?.id) {
+      getInvigilator(user.id)
+        .then((data) => {
+          if (data) {
+            setInvigilatorProfile(data);
+          }
+        })
+        .catch(() => {
+          Toast.show({
+            type: "error",
+            text1: "Error",
+            text2: "Failed to load invigilator profile",
+          });
+        });
     }
+  }, [user]);
+
+  // Find enrolled unit for today's exam
+  const findTodayEnrolledUnit = (
+    student: Student,
+    exams: Exam[]
+  ): [EnrolledUnit | null, Exam | null] => {
+    if (!student || !student.enrolledUnits || !exams || exams.length === 0)
+      return [null, null];
+    // Find the first exam for today
+    const exam = exams[0];
+    const enrolledUnit = student.enrolledUnits.find(
+      (eu: EnrolledUnit) => eu.courseUnitId === exam.courseUnitId
+    ) || null;
+    return [enrolledUnit, exam];
+  };
+
+  // Check exam timing and approval status
+  const checkExamStatus = (exam: Exam): 'waiting' | 'expired' | 'valid' => {
+    const now = new Date();
+    const startTime = new Date(exam.startTime);
+    const endTime = new Date(exam.endTime);
+
+    // If not approved and start time is within next hour, show waiting
+    if (!exam.isApproved && now < startTime && startTime.getTime() - now.getTime() <= 3600000) {
+      return 'waiting';
+    }
+
+    // If end time has passed, it's expired
+    if (now > endTime) {
+      return 'expired';
+    }
+
+    // If exam is approved and within time window, it's valid
+    if (exam.isApproved && now >= startTime && now <= endTime) {
+      return 'valid';
+    }
+
+    // In all other cases, show waiting
+    return 'waiting';
+  };
+
+  // Approve handler
+  const handleApprove = async () => {
+    if (!approvedUnit) {
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "No enrolled unit to approve",
+      });
+      return;
+    }
+
+    if (!invigilatorProfile?.id) {
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Invigilator ID not found",
+      });
+      return;
+    }
+
+    setIsApproving(true);
+    try {
+      await approveEnrolledCourseUnit(approvedUnit.id, invigilatorProfile.id);
+
+      const updatedStudent = await getStudentByQrId(scanData!);
+      setStudent(updatedStudent);
+
+      const updatedUnit = updatedStudent?.enrolledUnits?.find(
+        (unit: any) => unit.id === approvedUnit.id
+      );
+      setApprovedUnit(updatedUnit || null);
+
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Student has been approved for the exam",
+      });
+    } catch (error) {
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to approve student",
+      });
+    } finally {
+      setIsApproving(false);
+    }
+  };
+
+  // Request camera permission on mount
+  useEffect(() => {
+    const requestPermission = async () => {
+      const { status } = await Camera.requestCameraPermissionsAsync();
+      setHasPermission(status === "granted");
+    };
+    requestPermission();
   }, []);
 
-  // Add function to handle navigation after scan
-  const handleScanResult = async (data: string) => {
-    setScanned(true);
-    // Try to extract the QR code ID from the scanned URL
-    const match = data.match(/\/qr\/([^/]+)/);
-    const qrId = match ? match[1] : null;
-    if (!qrId) {
-      setScanData("Invalid QR code");
-      setModalVisible(true);
-      Toast.show({
-        type: "error",
-        text1: "Invalid QR Code",
-        text2: "Could not extract student QR code ID"
-      });
-      return;
-    }
-    // Fetch the full student details by QR id (async, always up-to-date)
-    let student: any = null;
-    if (typeof useStudents === 'function' && useStudents().getStudentByQrId) {
-      student = await useStudents().getStudentByQrId(qrId);
-    } else if (students && Array.isArray(students)) {
-      student = students.find((s: any) => s.qrId === qrId || s.id === qrId);
-    }
-    if (!student) {
-      setScanData("Student not found");
-      setModalVisible(true);
-      Toast.show({
-        type: "error",
-        text1: "Student Not Found",
-        text2: "No student matches this QR code."
-      });
-      return;
-    }
-    // Find the next enrolled exam (enrolledUnit) for today or upcoming
-    const now = new Date();
-    const todayStr = now.toISOString().slice(0, 10);
-    const upcomingUnits = (student.enrolledUnits || [])
-      .filter((unit: any) => {
-        // Find the exam date for this course unit
-        const examDate = unit.examDate || unit.courseUnit?.examDate;
-        if (!examDate) return false;
-        return new Date(examDate) >= new Date(todayStr);
-      })
-      .sort((a: any, b: any) => {
-        const aDate = new Date(a.examDate || a.courseUnit?.examDate);
-        const bDate = new Date(b.examDate || b.courseUnit?.examDate);
-        return aDate.getTime() - bDate.getTime();
-      });
-    const nextUnit = upcomingUnits[0];
-    if (!nextUnit) {
-      setScanData("No upcoming exam found for this student");
-      setModalVisible(true);
-      Toast.show({
-        type: "error",
-        text1: "No Upcoming Exam",
-        text2: "This student has no upcoming exam."
-      });
-      return;
-    }
-    // Check approval and timing
-    const isApproved = nextUnit.isInvigilatorApproved || nextUnit.approved || nextUnit.isApproved;
-    const start = new Date(nextUnit.startTime || nextUnit.examDate || nextUnit.courseUnit?.examDate);
-    const end = new Date(nextUnit.endTime || (start.getTime() + 2 * 60 * 60 * 1000)); // fallback: 2hr window
-    if (!isApproved || now < start) {
-      // Use QR_CODE_BASE_URL for mobile deep link or web fallback
-      if (Platform.OS === "web") {
-        window.location.href = `${QR_CODE_BASE_URL}/qr/WaitingForApproval`;
-      } else {
-        Linking.openURL(`${QR_CODE_BASE_URL}/qr/WaitingForApproval`);
-      }
-      return;
-    }
-    if (now > end) {
-      if (Platform.OS === "web") {
-        window.location.href = `${QR_CODE_BASE_URL}/qr/ApprovalTimeExpired`;
-      } else {
-        Linking.openURL(`${QR_CODE_BASE_URL}/qr/ApprovalTimeExpired`);
-      }
-      return;
-    }
-    // Exam is approved and ongoing
-    if (Platform.OS === "web") {
-      window.location.href = `${QR_CODE_BASE_URL}/qr/${qrId}`;
-    } else {
-      Linking.openURL(`${QR_CODE_BASE_URL}/qr/${qrId}`);
-    }
-  };
-
-  // Mobile web: load html5-qrcode and start scanner
+  // Cleanup HTML5 QR scanner
   useEffect(() => {
-    let qr: any = null;
-    if (
-      Platform.OS.toString() === "web" &&
-      isMobile() &&
-      html5QrRef.current &&
-      !html5QrLoaded
-    ) {
-      import("html5-qrcode").then(({ Html5Qrcode }) => {
-        qr = new Html5Qrcode("qr-reader");
-        qr.start(
-          { facingMode: "environment" },
-          {
-            fps: 10,
-            qrbox: 250,
-          },
-          (decodedText: string) => {
-            handleScanResult(decodedText);
-            qr.stop();
-          },
-          (error: any) => {
-            // Ignore scan errors
-          }
-        );
-        setHtml5QrLoaded(true);
-      });
-    }
-
-    // Cleanup function to stop scanner when component unmounts
     return () => {
-      if (qr) {
-        qr.stop();
+      if (scannerRef.current) {
+        scannerRef.current.stop().catch(() => {});
+        scannerRef.current = null;
       }
     };
-  }, [html5QrLoaded]);
+  }, []);
 
-  // Native mobile scan handler
-  const handleBarCodeScanned = ({ data }: BarcodeScanningResult) => {
-    if (!scanned) {
-      handleScanResult(data);
+  // Initialize HTML5 QR scanner
+  useEffect(() => {
+    if (
+      Platform.OS === "web" &&
+      isMobile() &&  // Changed condition to handle mobile web
+      !html5QrLoaded &&
+      html5QrRef.current &&
+      !scannerRef.current
+    ) {
+      try {
+        const scanner = new Html5Qrcode(html5QrRef.current.id);
+        scannerRef.current = scanner;
+        
+        scanner
+          .start(
+            { facingMode: "environment" },
+            {
+              fps: 10,
+              qrbox: 250,
+            },
+            async (decodedText: string) => {
+              if (scannerRef.current) {
+                scannerRef.current.stop().then(() => {
+                  scannerRef.current = null;
+                  setHtml5QrLoaded(false);
+                  handleScan(decodedText);
+                }).catch(() => {
+                  // If stop fails, still proceed with scan
+                  scannerRef.current = null;
+                  setHtml5QrLoaded(false);
+                  handleScan(decodedText);
+                });
+              }
+            },
+            () => {} // Ignore failures
+          )
+          .catch(() => {
+            Toast.show({
+              type: "error",
+              text1: "Scanner Error",
+              text2: "Failed to start QR scanner",
+            });
+            scannerRef.current = null;
+            setHtml5QrLoaded(false);
+          });
+        setHtml5QrLoaded(true);
+      } catch (err) {
+        Toast.show({
+          type: "error",
+          text1: "Scanner Error",
+          text2: "Failed to initialize QR scanner",
+        });
+        scannerRef.current = null;
+        setHtml5QrLoaded(false);
+      }
+    }
+  }, [html5QrRef.current, html5QrLoaded]);
+
+  // Handle scan logic
+  const handleScan = async (data: string) => {
+    setScanned(true);
+    setScanData(data);
+    setModalVisible(false);
+    setNoExamModalVisible(false);
+    setWaitingForApprovalVisible(false);
+    setApprovalExpiredVisible(false);
+    setStudent(null);
+    setApprovedUnit(null);
+    setCurrentExam(null);
+    setLoadingMessage("Checking Student & Exam");
+    setLoading(true);
+
+    try {
+      // 1. Fetch student details
+      setLoadingMessage("Fetching student details...");
+      const studentData = await getStudentByQrId(data);
+      if (studentData) {
+        setStudent(studentData);
+      }
+
+      if (!studentData) {
+        setLoading(false);
+        Toast.show({
+          type: "error",
+          text1: "Invalid QR Code",
+          text2: "No student found with this code",
+        });
+        return;
+      }
+
+      // 2. Check exams for today
+      setLoadingMessage("Checking exam schedule...");
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, "0");
+      const dd = String(today.getDate()).padStart(2, "0");
+      const todayStr = `${yyyy}-${mm}-${dd}`;
+
+      const examResult = await getStudentExamsByQrIdAndDate(data, todayStr);
+
+      setLoading(false);
+
+      if (!examResult.exams || examResult.exams.length === 0) {
+        setNoExamModalVisible(true);
+        return;
+      }
+
+      // 3. Find matching enrolled unit for today's exam
+      const [enrolledUnit, exam] = findTodayEnrolledUnit(studentData, examResult.exams);
+      
+      if (!enrolledUnit || !exam) {
+        Toast.show({
+          type: "error",
+          text1: "No Enrolled Course Unit",
+          text2: "Student is not enrolled for today's exam",
+        });
+        return;
+      }
+
+      setApprovedUnit(enrolledUnit);
+      setCurrentExam(exam);
+
+      // 4. Check exam status
+      const examStatus = checkExamStatus(exam);
+      
+      if (examStatus === 'waiting') {
+        setWaitingForApprovalVisible(true);
+      } else if (examStatus === 'expired') {
+        setApprovalExpiredVisible(true);
+      } else {
+        setModalVisible(true);
+      }
+
+    } catch (error) {
+      setLoading(false);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to process QR code",
+      });
     }
   };
 
-  // To fix the black screen issue, add a cleanup effect and reset scanned state on focus
+  // Handle barcode scan
+  const handleBarCodeScanned = async (result: BarcodeScanningResult) => {
+    if (scanned) return;
+    setScanned(true);
+    await handleScan(result.data);
+  };
+
+  // Reset scanned state when the screen regains focus
   useEffect(() => {
-    // Reset states when component unmounts
-    return () => {
+    const focusHandler = () => {
       setScanned(false);
       setScanData(null);
-      setModalVisible(false);
-      setHtml5QrLoaded(false);
     };
-  }, []);
-
-  // Reset scanned state when the screen regains focus (for expo-router)
-  useEffect(() => {
-    const focusHandler = () => setScanned(false);
-    window?.addEventListener?.('focus', focusHandler);
+    window?.addEventListener?.("focus", focusHandler);
     return () => {
-      window?.removeEventListener?.('focus', focusHandler);
+      window?.removeEventListener?.("focus", focusHandler);
     };
   }, []);
+  const resetScanner = () => {
+    setScanned(false);
+    setScanData(null);
+    setModalVisible(false);
+    setNoExamModalVisible(false);
+    setWaitingForApprovalVisible(false);
+    setApprovalExpiredVisible(false);
+    setStudent(null);
+    setApprovedUnit(null);
+    setCurrentExam(null);
+    setLoading(false);
+    setLoadingMessage("Checking Student & Exam");
+    if (Platform.OS === "web") {
+      // Stop current scanner instance if it exists
+      if (scannerRef.current) {
+        scannerRef.current.stop()
+          .then(() => {
+            scannerRef.current = null;
+            setHtml5QrLoaded(false); // This will trigger scanner reinitialize
+          })
+          .catch(() => {
+            scannerRef.current = null;
+            setHtml5QrLoaded(false);
+          });
+      } else {
+        setHtml5QrLoaded(false);
+      }
+    }
+  };
 
-  // Desktop web: show error/instruction page with animation
-  if (Platform.OS.toString() === "web" && !isMobile()) {
-    return (
-      <SafeAreaView style={tw`flex-1 bg-[${invigilatorTheme.bg}]`}>
-        {/* Header restored */}
-        <View style={[tw`p-6 rounded-b-3xl w-full`, { backgroundColor: invigilatorTheme.primary, shadowColor: "#000", shadowOpacity: 0.2 }]}> 
-          <Text style={tw`text-2xl font-bold text-white`}>Scan QR Code</Text>
-        </View>
-        <View style={tw`flex-1 items-center justify-center p-4`}>        
-          <FuturisticDangerTriangleLoaderV2 />
-          <Text style={tw`text-2xl font-bold text-[${invigilatorTheme.accent}] mt-8 mb-2`}>QR Scanning Not Supported</Text>
-          <Text style={tw`text-base text-gray-700 text-center mb-4`}>Please switch to a mobile device to scan QR codes.</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  // Mobile web: html5-qrcode
-  if (Platform.OS.toString() === "web" && isMobile()) {
-    return (
-      <SafeAreaView style={tw`flex-1 bg-[${invigilatorTheme.bg}]`}>
-        <View style={tw`flex-1 p-4 items-center`}>
-          <Text
-            style={tw`text-2xl font-bold mb-4 text-[${invigilatorTheme.accent}]`}
-          >
-            QR Code Scanner
-          </Text>
-          <div
-            ref={html5QrRef}
-            id="qr-reader"
-            style={{ width: 300, height: 300, margin: "0 auto" }}
-          />
-          {/* Modal for scan result */}
-          <Modal
-            transparent
-            visible={modalVisible}
-            animationType="fade"
-            onRequestClose={() => setModalVisible(false)}
-          >
-            <View
-              style={tw`flex-1 bg-black bg-opacity-50 justify-center items-center`}
-            >
-              <View style={tw`bg-white p-6 rounded-lg w-3/4`}>
-                <Text
-                  style={tw`text-center font-bold mb-2 text-[${invigilatorTheme.primary}]`}
-                >
-                  Scan Complete
-                </Text>
-                <Text style={tw`text-center mb-4 text-gray-700`}>
-                  {scanData ? `Data: ${scanData}` : "No data found."}
-                </Text>
-                <Pressable
-                  style={tw`mt-2 bg-[${invigilatorTheme.primary}] py-2 rounded-lg`}
-                  onPress={() => {
-                    setModalVisible(false);
-                    setScanned(false);
-                  }}
-                >
-                  <Text style={tw`text-white text-center`}>Close</Text>
-                </Pressable>
-              </View>
-            </View>
-          </Modal>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  // Native mobile: expo-camera/next
+  // Native mobile: expo-camera barcode scanning
   if (Platform.OS !== "web") {
     if (hasPermission === null) {
       return (
         <View
           style={tw`flex-1 justify-center items-center bg-[${invigilatorTheme.bg}]`}
         >
-          {/* Header */}
-          <View style={[tw`w-full p-6 rounded-b-3xl`, { backgroundColor: invigilatorTheme.primary, shadowColor: "#000", shadowOpacity: 0.2 }]}> 
-            <Text style={tw`text-2xl font-bold text-white`}>Scan QR Code</Text>
-          </View>
           <ActivityIndicator size="large" color={invigilatorTheme.primary} />
           <Text style={tw`mt-4 text-gray-700`}>
             Requesting camera permission...
@@ -359,10 +425,6 @@ export default function ScanQRPage() {
         <View
           style={tw`flex-1 justify-center items-center bg-[${invigilatorTheme.bg}]`}
         >
-          {/* Header */}
-          <View style={[tw`w-full p-6 rounded-b-3xl`, { backgroundColor: invigilatorTheme.primary, shadowColor: "#000", shadowOpacity: 0.2 }]}> 
-            <Text style={tw`text-2xl font-bold text-white`}>Scan QR Code</Text>
-          </View>
           <Text style={tw`text-red-600`}>No access to camera</Text>
           <Pressable
             style={tw`mt-4 bg-[${invigilatorTheme.primary}] py-2 px-6 rounded-lg`}
@@ -376,20 +438,32 @@ export default function ScanQRPage() {
         </View>
       );
     }
-
     return (
       <SafeAreaView style={tw`flex-1 bg-[${invigilatorTheme.bg}]`}>
-        {/* Themed header for mobile, matching web */}
-        <View style={[tw`p-6 rounded-b-3xl w-full`, { backgroundColor: invigilatorTheme.primary, shadowColor: "#000", shadowOpacity: 0.2 }]}> 
+        {/* Header */}
+        <View
+          style={[
+            tw`p-6 rounded-b-3xl w-full`,
+            {
+              backgroundColor: invigilatorTheme.primary,
+              shadowColor: "#000",
+              shadowOpacity: 0.2,
+            },
+          ]}
+        >
           <Text style={tw`text-2xl font-bold text-white`}>Scan QR Code</Text>
         </View>
         <View style={tw`flex-1 p-4`}>
-          <Text
-            style={tw`text-2xl font-bold mb-4 text-[${invigilatorTheme.accent}]`}
-          >
-            QR Code Scanner
-          </Text>
-          <View style={tw`flex-1 items-center justify-center`}>
+          {/* Instructions */}
+          <View style={tw`mb-6`}>
+            <Text style={tw`text-center text-gray-1000 text-base mb-2`}>
+              Position the student's QR code within the frame
+            </Text>
+            <Text style={tw`text-center text-gray-500 text-sm`}>
+              Make sure the code is well-lit and clearly visible
+            </Text>
+          </View>
+          <View style={tw`items-center justify-center mb-4`}>
             <View
               style={tw`overflow-hidden rounded-2xl border-4 border-[${invigilatorTheme.primary}]`}
             >
@@ -399,8 +473,6 @@ export default function ScanQRPage() {
                   barcodeTypes: ["qr"],
                 }}
                 onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
-                // Add key prop to force re-render
-                key={scanned ? "scanning" : "not-scanning"}
               />
             </View>
             {scanned && (
@@ -416,42 +488,141 @@ export default function ScanQRPage() {
             )}
           </View>
         </View>
-        {/* Modal for scan result */}
-        <Modal
-          transparent
+        <StudentScanDetails
           visible={modalVisible}
-          animationType="fade"
-          onRequestClose={() => setModalVisible(false)}
-        >
-          <View
-            style={tw`flex-1 bg-black bg-opacity-50 justify-center items-center`}
-          >
-            <View style={tw`bg-white p-6 rounded-lg w-3/4`}>
-              <Text
-                style={tw`text-center font-bold mb-2 text-[${invigilatorTheme.primary}]`}
-              >
-                Scan Complete
-              </Text>
-              <Text style={tw`text-center mb-4 text-gray-700`}>
-                {scanData ? `Data: ${scanData}` : "No data found."}
-              </Text>
-              <Pressable
-                style={tw`mt-2 bg-[${invigilatorTheme.primary}] py-2 rounded-lg`}
-                onPress={() => {
-                  setModalVisible(false);
-                  setScanned(false);
-                }}
-              >
-                <Text style={tw`text-white text-center`}>Close</Text>
-              </Pressable>
-            </View>
-          </View>
-        </Modal>
+          onClose={() => {
+            setModalVisible(false);
+            resetScanner();
+          }}
+          student={student}
+          scanData={scanData}
+          isApproving={isApproving}
+          onApprove={handleApprove}
+          approvedUnit={approvedUnit}
+        />
+        <NoExamToday
+          visible={noExamModalVisible}
+          onClose={() => {
+            setNoExamModalVisible(false);
+            resetScanner();
+          }}
+        />
+        <LoaderModal visible={loading} message={loadingMessage} />
         <Toast config={toastConfig} />
+        <WaitingForApprovalModal
+          visible={waitingForApprovalVisible}
+          onClose={() => {
+            setWaitingForApprovalVisible(false);
+            resetScanner();
+          }}
+        />
+        <ApprovalTimeExpiredModal
+          visible={approvalExpiredVisible}
+          onClose={() => {
+            setApprovalExpiredVisible(false);
+            resetScanner();
+          }}
+        />
       </SafeAreaView>
     );
-  }
-
-  // fallback
+  }  // Web fallback
+  if (Platform.OS === "web") {
+    // For desktop web
+    if (!isMobile()) {
+      return <DesktopScanWarning />;
+    }
+    // For mobile web
+    return (
+      <SafeAreaView style={tw`flex-1 bg-[${invigilatorTheme.bg}]`}>
+        <View
+          style={[
+            tw`p-6 rounded-b-3xl w-full`,
+            { backgroundColor: invigilatorTheme.primary },
+          ]}
+        >
+          <Text style={tw`text-2xl font-bold text-white`}>Scan QR Code</Text>
+        </View>
+          <View style={tw`flex-1 p-4 items-center`}>
+            {/* Instructions */}
+            <View style={tw`mb-6`}>
+              <Text style={tw`text-center text-gray-700 text-base mb-2`}>
+                Position the student's QR code within the frame
+              </Text>
+              <Text style={tw`text-center text-gray-500 text-sm`}>
+                Make sure the code is well-lit and clearly visible
+              </Text>
+            </View>
+            <div
+              ref={html5QrRef}
+              id="qr-reader"
+              style={{
+                width: 300,
+                height: 300,
+                margin: "0 auto",
+                borderRadius: "16px",
+                overflow: "hidden",
+                border: `4px solid ${invigilatorTheme.primary}`,
+              }}
+            />
+            {scanned && (
+              <Pressable
+                style={tw`mt-6 bg-[${invigilatorTheme.primary}] py-3 px-8 rounded-lg`}
+                onPress={() => {
+                  setScanned(false);
+                  setScanData(null);
+                  setHtml5QrLoaded(false); // This will trigger scanner reinitialize
+                }}
+              >
+                <Text style={tw`text-white font-semibold`}>Scan Again</Text>
+              </Pressable>
+            )}
+          </View>
+          <StudentScanDetails
+            visible={modalVisible}
+            onClose={() => {
+              setModalVisible(false);
+              resetScanner();
+            }}
+            student={student}
+            scanData={scanData}
+            isApproving={isApproving}
+            onApprove={handleApprove}
+            approvedUnit={approvedUnit}
+          />
+          <NoExamToday
+            visible={noExamModalVisible}
+            onClose={() => {
+              setNoExamModalVisible(false);
+              resetScanner();
+            }}
+          />
+          <LoaderModal visible={loading} message={loadingMessage} />
+          <Toast config={toastConfig} />
+          <WaitingForApprovalModal
+            visible={waitingForApprovalVisible}
+            onClose={() => {
+              setWaitingForApprovalVisible(false);
+              resetScanner();
+            }}
+          />
+          <ApprovalTimeExpiredModal
+            visible={approvalExpiredVisible}
+            onClose={() => {
+              setApprovalExpiredVisible(false);
+              resetScanner();
+            }}
+          />
+        </SafeAreaView>
+      );
+    }
+    return (
+      <View
+        style={tw`flex-1 justify-center items-center bg-[${invigilatorTheme.bg}]`}
+      >
+        <Text style={tw`text-xl text-gray-700 mb-4`}>
+          Please use a mobile device to scan QR codes
+        </Text>
+      </View>
+    );
   return null;
 }

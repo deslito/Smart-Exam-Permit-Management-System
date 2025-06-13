@@ -196,7 +196,7 @@ export default function StudentDetailsPage() {
           )}
 
           {/* Actions */}
-          <View className="flex-row space-x-3 mt-4">
+          <View className="flex-row mx-3 mt-4">
             <Pressable
               onPress={handleApprove}
               disabled={processingApproval || !isPermitValid || isApproved}

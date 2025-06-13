@@ -126,12 +126,22 @@ export default function Profile() {
                 label="Full Name"
                 value={`${invigilator.firstName} ${invigilator.lastName}`}
               />
-              <InfoRow label="Staff ID" value={invigilator.invigilatorNumber || invigilator.id || "-"} />
+              <InfoRow
+                label="Staff ID"
+                value={invigilator.invigilatorNumber || invigilator.id || "-"}
+              />
               <InfoRow
                 label="Department ID"
-                value={invigilator.department?.id || invigilator.departmentId || "N/A"}
+                value={
+                  invigilator.department?.id ||
+                  invigilator.departmentId ||
+                  "N/A"
+                }
               />
-              <InfoRow label="Email" value={invigilator.user?.email || user?.email || "-"} />
+              <InfoRow
+                label="Email"
+                value={invigilator.user?.email || user?.email || "-"}
+              />
             </View>
           </View>
 
@@ -167,9 +177,14 @@ export default function Profile() {
                       tw`flex-row items-center px-4 py-2 rounded-lg`,
                       {
                         backgroundColor:
-                          hovered || pressed ? "#003366" : "#fff8f0",
+                          hovered || pressed ? "#FDB57E" : "#fff8f0",
                         transform: [{ scale: hovered || pressed ? 1.1 : 1 }],
                         minWidth: 120,
+                        shadowColor: "#000",
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.25,
+                        shadowRadius: 4,
+                        elevation: 6
                       },
                     ]}
                     onPress={() => setIsPasswordModalVisible(true)}
@@ -204,8 +219,13 @@ export default function Profile() {
                         tw`flex-row items-center px-4 py-2 rounded-lg`,
                         {
                           backgroundColor: isChangePressed
-                            ? "#003366"
+                            ? "#FDB57E"
                             : "#fff8f0",
+                          shadowColor: "#000",
+                          shadowOffset: { width: 0, height: 2 },
+                          shadowOpacity: 0.3,
+                          shadowRadius: 4,
+                          elevation: 6,
                           minWidth: 120,
                         },
                       ]}
@@ -239,6 +259,11 @@ export default function Profile() {
                     backgroundColor: hovered || pressed ? "#fff8f0" : "#fff",
                     borderColor: "#ef4444",
                     transform: [{ scale: hovered || pressed ? 1.02 : 1 }],
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 4,
+                    elevation: 6
                   },
                 ]}
               >
@@ -262,8 +287,12 @@ export default function Profile() {
                   style={[
                     tw`flex-row items-center justify-center py-3 rounded-lg mb-8 border`,
                     {
-                      backgroundColor: isLogoutPressed ? "#e6ffe6" : "#fff",
+                      backgroundColor: isLogoutPressed ? "#fff8f0" : "#fff",
                       borderColor: "#ef4444",
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.25,
+                      shadowRadius: 4,
+                      elevation: 6,
                     },
                   ]}
                 >

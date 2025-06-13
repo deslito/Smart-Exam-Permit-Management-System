@@ -126,24 +126,6 @@ export default function InvigilatorLayout() {
                   ),
                 }}
               />
-              <Tabs.Screen
-                name="qr/[id]"
-                options={{
-                  href: null, // This hides it from the tab bar
-                }}
-              />
-              <Tabs.Screen
-                name="qr/WaitingForApproval"
-                options={{
-                  href: null, // This hides it from the tab bar
-                }}
-              />
-              <Tabs.Screen
-                name="qr/ApprovalTimeExpired"
-                options={{
-                  href: null, // This hides it from the tab bar
-                }}
-              />
             </Tabs>
             <Toaster />
           </React.Fragment>

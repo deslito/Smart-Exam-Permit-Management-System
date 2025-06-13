@@ -21,6 +21,7 @@ export interface ExamAssignment {
 // Exam interface (from courseUnit.exams)
 export interface Exam {
   id: string;
+  courseUnitId: string; // Added this property
   examDate: string;
   startTime: string;
   endTime: string;

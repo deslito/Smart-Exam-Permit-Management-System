@@ -117,8 +117,9 @@ interface StudentContextType {
   error: string | null;
   refresh: () => Promise<void>;
   getStudent: (id: string) => Promise<Student | null>;
-  getStudentByQrId: (qrId: string) => Promise<Student | null>; // <-- Add this
-  approveEnrolledCourseUnit: (enrolledCourseUnitId: string, approvedBy: string) => Promise<void>; // <-- Add this
+  getStudentByQrId: (qrId: string) => Promise<Student | null>;
+  getStudentsApprovedByInvigilator: (invigilatorId: string) => Promise<Record<string, any[]>>;
+  approveEnrolledCourseUnit: (enrolledCourseUnitId: string, approvedBy: string) => Promise<void>;
 }
 
 const StudentContext = createContext<StudentContextType | undefined>(undefined);
@@ -234,13 +235,28 @@ export const StudentProvider = ({ children }: { children: ReactNode }) => {
       console.error(`Error fetching student by QR ID ${qrId}:`, err);
       return null;
     }
-  };
-
-  const approveEnrolledCourseUnit = async (enrolledCourseUnitId: string, approvedBy: string) => {
+  };  const approveEnrolledCourseUnit = async (enrolledCourseUnitId: string, approvedBy: string) => {
+    setLoading(true);
+    setError(null);
     try {
       await approveECUApi(enrolledCourseUnitId, approvedBy);
     } catch (err) {
       console.error('Error approving enrolled course unit:', err);
+      throw err;
+    }
+  };
+
+  const getStudentsApprovedByInvigilator = async (invigilatorId: string): Promise<Record<string, any[]>> => {
+    try {
+      const token = await getToken();
+      const res = await axios.get(`${API_BASE_URL}/students/approved-by-invigilator/${invigilatorId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return res.data;
+    } catch (err) {
+      console.error(`Error fetching approved students for invigilator ${invigilatorId}:`, err);
       throw err;
     }
   };
@@ -258,6 +274,7 @@ export const StudentProvider = ({ children }: { children: ReactNode }) => {
         refresh,
         getStudent,
         getStudentByQrId,
+        getStudentsApprovedByInvigilator,
         approveEnrolledCourseUnit
       }}
     >

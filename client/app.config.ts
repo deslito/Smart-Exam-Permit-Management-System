@@ -21,10 +21,17 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.kyambogo.smartexampermit",
+    infoPlist: {
+      NSCameraUsageDescription: 'Allow Smart Exam Permit to access your camera to scan QR codes',
+    },
   },
   android: {
     package: "com.deslito.smartexampermitapp",
-    permissions: ["android.permission.CAMERA"],
+    permissions: [
+      'CAMERA',
+      'READ_EXTERNAL_STORAGE',
+      'WRITE_EXTERNAL_STORAGE'
+    ],
     adaptiveIcon: {
       foregroundImage: "./assets/images/adaptive-icon.png",
       backgroundColor: "#ffffff",
@@ -56,7 +63,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       projectId: "621d9f61-c9cc-4976-9e96-55982fc1c6f5",
     },
     EXPO_PUBLIC_API_BASE_URL: process.env.EXPO_PUBLIC_API_BASE_URL,
-    EXPO_PUBLIC_QR_CODE_BASE_URL: process.env.EXPO_PUBLIC_QR_CODE_BASE_URL, // This will be used to generate QR links
     EXPO_PUBLIC_ENV: process.env.EXPO_PUBLIC_ENV,
   },
   scheme: "kyambogoexamapp", // Short and clean deep linking scheme

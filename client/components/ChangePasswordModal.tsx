@@ -206,7 +206,7 @@ export default function ChangePasswordModal({
           </View>
 
           {/* Form Fields */}
-          <View style={tw`space-y-6`}> {/* Increased spacing from space-y-4 to space-y-6 */}
+          <View style={tw`my-6`}> {/* Increased spacing from my-4 to my-6 */}
             <View style={tw`relative`}>
               <Text style={tw`text-sm font-medium text-gray-700 mb-1`}>
                 Current Password
@@ -263,7 +263,7 @@ export default function ChangePasswordModal({
           </View>
 
           {/* Buttons */}
-          <View style={tw`flex-row justify-end mt-10 space-x-6`}> {/* Increased margin and spacing */}
+          <View style={tw`flex-row justify-end mt-10 mx-6`}> {/* Increased margin and spacing */}
             <Pressable
               style={[
                 tw`px-8 py-3 rounded-xl`, // Increased horizontal padding from px-4 to px-6

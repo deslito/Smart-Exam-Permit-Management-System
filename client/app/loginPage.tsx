@@ -24,6 +24,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { GestureDetector, Gesture } from "react-native-gesture-handler";
+import { fetchWithRetry } from "@/utils/fetchWithRetry";
 
 // Role-specific color themes
 const roleThemes = {
@@ -120,8 +121,12 @@ export default function LoginPage() {
 
     setIsLoggingIn(true);
     try {
-      const authUser = await login(email, password);
-
+      // Use fetchWithRetry to retry login up to 5 times with 2s delay
+      const authUser = await fetchWithRetry(() => login(email, password), 5, 2000);
+      // Defensive: check for missing/invalid response
+      if (!authUser || !authUser.role) {
+        throw new Error("Invalid credentials or server error. Please try again.");
+      }
       // Check if the logged-in user's role matches the selected role
       if (
         normalizedRole &&
@@ -140,7 +145,7 @@ export default function LoginPage() {
       router.push(getRoleRoute(authUser.role));
     } catch (err: any) {
       console.error("Login failed:", err);
-      showToast("error", "Login failed", err.message || "Invalid credentials.");
+      showToast("error", "Login failed", err.message || "Invalid credentials or server error.");
     } finally {
       setIsLoggingIn(false);
     }
@@ -165,7 +170,7 @@ export default function LoginPage() {
       >
         <View className="w-full max-w-md">
           {/* Logo + Titles */}
-          <View className="items-center mb-8 space-y-2">
+          <View className="items-center mb-8 my-2">
             <Image
               source={KyambogoLogo}
               style={tw`w-48 h-48`}
@@ -187,7 +192,7 @@ export default function LoginPage() {
 
           {/* Form Container */}
           <View
-            className="bg-white p-6 rounded-2xl shadow-md space-y-5"
+            className="bg-white p-6 rounded-2xl shadow-md my-5"
             style={{
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 2 },
@@ -197,7 +202,7 @@ export default function LoginPage() {
             }}
           >
             {/* Email */}
-            <View style={Platform.OS === "ios" || Platform.OS === "android" ? tw`mb-4` : undefined}>
+            <View style={Platform.OS === "ios" || Platform.OS === "android" ? tw`mb-4` : tw`mb-3`}>
               <Text className="text-sm font-medium text-gray-700 mb-1">
                 Email
               </Text>
@@ -219,7 +224,7 @@ export default function LoginPage() {
             </View>
 
             {/* Password */}
-            <View style={Platform.OS === "ios" || Platform.OS === "android" ? tw`mb-4` : undefined}>
+            <View style={Platform.OS === "ios" || Platform.OS === "android" ? tw`mb-4` : tw`mb-3`}>
               <View className="flex-row justify-between items-center mb-1">
                 <Text className="text-sm font-medium text-gray-700">
                   Password

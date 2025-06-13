@@ -195,7 +195,9 @@ export const PermitCard = ({
         {/* QR Code */}
         {!hideQRCode && permitDataState.qrCode && (
           <View style={tw`items-center py-6 border-t border-gray-100`}>
+            {/* Only encode the UUID, not a URL */}
             <QRCode value={permitDataState.qrCode} size={150} />
+            <Text style={tw`mt-2 text-xs text-gray-500`}>Permit QR UUID: {permitDataState.qrCode}</Text>
           </View>
         )}
         {/* Instructions */}

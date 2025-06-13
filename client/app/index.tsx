@@ -1,9 +1,8 @@
+import React from "react";
 import { View, Text, Pressable, Image, Platform } from "react-native";
 import { useRouter } from "expo-router";
 import BackgroundWrapper from "@/components/BackgroundWrapper";
 import HorizontalDivider from "@/components/HorizontalDivider";
-import KyambogoLogo from "@/assets/images/kyambogoLogo.png";
-import { toast } from "sonner";
 
 export default function HomePage() {
   const router = useRouter();
@@ -35,8 +34,13 @@ export default function HomePage() {
           {/* ✅ Centered Logo + Text Block */}
           <View className="flex-1 justify-space-around items-center">
             <Image
-              source={KyambogoLogo}
-              style={{ width: 140, height: 140, resizeMode: "contain", marginBottom: 16 }}
+              source={require("../assets/images/kyambogoLogo.png")}
+              style={{
+                width: 140,
+                height: 140,
+                resizeMode: "contain",
+                marginBottom: 16,
+              }}
             />
 
             <Text className="text-3xl font-bold text-university-navy text-center mb-2">
@@ -50,11 +54,11 @@ export default function HomePage() {
             <HorizontalDivider color="#F7941D" />
 
             <Text className="text-[16px] md:text-base text-center text-university-gray mt-4 px-2 leading-relaxed">
-              A streamlined system designed for universities and colleges to automate
-              the management and verification of examination permits. This project
-              ensures students can securely access their permits, exam supervisors
-              can verify eligibility in real-time, and administrators can manage
-              permit approvals efficiently.
+              A streamlined system designed for universities and colleges to
+              automate the management and verification of examination permits.
+              This project ensures students can securely access their permits, exam
+              supervisors can verify eligibility in real-time, and administrators
+              can manage permit approvals efficiently.
             </Text>
           </View>
 
@@ -69,8 +73,6 @@ export default function HomePage() {
                 Get Started
               </Text>
             </Pressable>
-            {/* Show this button only on web */}
-            {/* Removed Show Web Toast button */}
           </View>
         </View>
       </View>
