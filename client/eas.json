@@ -17,7 +17,12 @@
     "production": {
       "autoIncrement": true,
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease",
+        "env": {
+          "EXPO_PUBLIC_API_BASE_URL": "https://kyu-smart-exam-permit-management-system.onrender.com",
+          "EXPO_PUBLIC_ENV": "production"
+        }
       }
     }
   },

@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { View, Text, Pressable, Animated, Modal, Easing } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import tw from "twrnc";
+import { invigilatorTheme } from "@/app/(invigilators)/_layout";
 
 interface WaitingForApprovalModalProps {
   visible: boolean;
@@ -105,7 +106,7 @@ export default function WaitingForApprovalModal({ visible, onClose }: WaitingFor
             {/* Close Button */}
             <Animated.View style={[tw`items-center mt-8`, { opacity: fadeAnim }]}> 
               <Pressable
-                style={tw`flex-row items-center px-6 py-3 rounded-lg border border-gray-200`}
+                style={tw`flex-row items-center bg-[${invigilatorTheme.primary}] px-6 py-3 rounded-lg border border-gray-200`}
                 onPress={onClose}
               >
                 <Ionicons 

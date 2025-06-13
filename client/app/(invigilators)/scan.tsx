@@ -126,25 +126,19 @@ export default function ScanQRPage() {
   // Check exam timing and approval status
   const checkExamStatus = (exam: Exam): 'waiting' | 'expired' | 'valid' => {
     const now = new Date();
-    const startTime = new Date(exam.startTime);
     const endTime = new Date(exam.endTime);
-
-    // If not approved and start time is within next hour, show waiting
-    if (!exam.isApproved && now < startTime && startTime.getTime() - now.getTime() <= 3600000) {
-      return 'waiting';
-    }
 
     // If end time has passed, it's expired
     if (now > endTime) {
       return 'expired';
     }
 
-    // If exam is approved and within time window, it's valid
-    if (exam.isApproved && now >= startTime && now <= endTime) {
+    // If exam is approved and hasn't ended yet
+    if (exam.isApproved) {
       return 'valid';
     }
 
-    // In all other cases, show waiting
+    // If exam is not approved and hasn't ended yet, show waiting
     return 'waiting';
   };
 

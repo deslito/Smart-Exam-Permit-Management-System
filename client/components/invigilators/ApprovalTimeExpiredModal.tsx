@@ -63,21 +63,22 @@ export default function ApprovalTimeExpiredModal({ visible, onClose }: ApprovalT
                 {
                   opacity: fadeAnim,
                   transform: [{ rotate }],
-                },
-              ]}
+                },              ]}
             >
               <Text style={tw`text-7xl`}>⏰</Text>
             </Animated.View>
-          </Text>
-          <Text style={tw`text-base text-gray-700 text-center mb-6`}>
-            The approval window for this exam permit has expired. Please contact the invigilator or try again later.
-          </Text>
-          <Pressable
-            style={tw`mt-2 px-6 py-3 rounded-lg border border-gray-200`}
-            onPress={onClose}
-          >
-            <Text style={tw`text-gray-700 font-medium`}>Close</Text>
-          </Pressable>
+
+            <Text style={tw`text-base text-gray-700 text-center mb-6`}>
+              The approval window for this exam permit has expired. Please contact the invigilator or try again later.
+            </Text>
+
+            <Pressable
+              style={tw`mt-2 px-6 py-3 rounded-lg border border-gray-200`}
+              onPress={onClose}
+            >
+              <Text style={tw`text-gray-700 font-medium`}>Close</Text>
+            </Pressable>
+          </View>
         </View>
       </View>
     </Modal>

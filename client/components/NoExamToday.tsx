@@ -85,7 +85,7 @@ export function NoExamToday({ visible, onClose }: NoExamTodayProps) {
             {/* Close Button */}
             <View style={tw`flex-row justify-center`}>
               <Pressable
-                style={tw`flex-row items-center px-6 py-3 rounded-lg border border-gray-200`}
+                style={tw`flex-row items-center bg-[${invigilatorTheme.primary}] px-6 py-3 rounded-lg border border-gray-200`}
                 onPress={onClose}
               >
                 <Ionicons 

@@ -4,8 +4,7 @@ import { ExpoConfig, ConfigContext } from 'expo/config';
 export default ({ config }: ConfigContext): ExpoConfig => ({
   name: "Kyambogo University Smart Exam Permit Management System",
   description: "This is a mobile application for managing exam permits at Kyambogo University. It allows students to generate and manage their exam permits efficiently.",
-  slug: "kyambogo-university-smart-exam-permit-management-system",
-  version: "1.0.0",
+  slug: "kyambogo-university-smart-exam-permit-management-system",  version: "1.0.0",
   orientation: "portrait",
   userInterfaceStyle: "automatic",
   icon: "./assets/images/kyambogoLogo.png",
@@ -14,8 +13,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     resizeMode: "contain",
     backgroundColor: "#ffffff",
   },
+  runtimeVersion: {
+    policy: "sdkVersion"
+  },
   updates: {
+    url: "https://u.expo.dev/621d9f61-c9cc-4976-9e96-55982fc1c6f5",
+    enabled: true,
     fallbackToCacheTimeout: 0,
+    checkAutomatically: "ON_LOAD"
   },
   assetBundlePatterns: ["**/*"],
   ios: {
@@ -24,9 +29,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     infoPlist: {
       NSCameraUsageDescription: 'Allow Smart Exam Permit to access your camera to scan QR codes',
     },
-  },
-  android: {
-    package: "com.deslito.smartexampermitapp",
+  },  android: {
+    package: "com.kyambogo.smartexampermitapp",
+    versionCode: 1,
     permissions: [
       'CAMERA',
       'READ_EXTERNAL_STORAGE',
@@ -36,6 +41,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       foregroundImage: "./assets/images/adaptive-icon.png",
       backgroundColor: "#ffffff",
     },
+    softwareKeyboardLayoutMode: "pan",
+    allowBackup: true,
   },
   web: {
     bundler: "metro",
